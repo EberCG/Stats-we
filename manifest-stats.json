@@ -2,7 +2,7 @@
   "name": "Estadísticas - Para ti",
   "short_name": "Stats",
   "description": "Visitas e inicios de sesión de tu página",
-  "start_url": "./stats.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
