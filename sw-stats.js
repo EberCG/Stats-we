@@ -1,6 +1,6 @@
 const CACHE_NAME = 'stats-v1';
 const FILES_TO_CACHE = [
-  './stats.html',
+  './index.html',
   './manifest-stats.json',
   './stats-icon-192.png',
   './stats-icon-512.png',
