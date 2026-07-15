@@ -89,6 +89,15 @@
   }
   .tag.visit{background:rgba(177,153,255,0.2);color:var(--accent-violet);}
   .tag.login{background:rgba(255,122,176,0.2);color:var(--pink-glow);}
+  .tag.letter_read{background:rgba(255,206,122,0.2);color:#ffce7a;}
+
+  .letter-reset-btn{
+    display:block;width:100%;margin:0 auto 10px;padding:14px;border-radius:14px;
+    border:1px solid rgba(255,206,122,0.4);
+    background:linear-gradient(135deg, rgba(255,206,122,0.22), rgba(255,122,176,0.12));
+    color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;font-size:.9rem;
+    cursor:pointer;
+  }
 
   .refresh-btn, .logout-btn{
     display:block;margin:20px auto 0;padding:10px 20px;border-radius:20px;
@@ -125,7 +134,12 @@
         <div class="stat-num" id="loginCount">–</div>
         <div class="stat-label">inicios de sesión</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-num" id="letterCount">–</div>
+        <div class="stat-label">cartas leídas</div>
+      </div>
     </div>
+    <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar carta de nuevo</button>
     <p class="activity-title">Actividad reciente</p>
     <ul class="activity-list" id="activityList"></ul>
     <p class="loading-msg" id="loadingMsg" style="display:none;">Cargando...</p>
@@ -185,6 +199,19 @@ auth.onAuthStateChanged(function(user){
 });
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
+
+document.getElementById('resetLetterBtn').addEventListener('click', function(){
+  const btn = this;
+  db.collection('letter').doc('trigger').set({
+    resetAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    const original = btn.textContent;
+    btn.textContent = '💌 Enviado, volverá a aparecer';
+    setTimeout(() => { btn.textContent = original; }, 2000);
+  }).catch(() => {
+    btn.textContent = 'No se pudo, revisa tu conexión';
+  });
+});
 document.getElementById('refreshBtn').addEventListener('click', loadStats);
 
 function loadStats(){
@@ -192,17 +219,19 @@ function loadStats(){
   loadingMsg.style.display = 'block';
 
   db.collection('events').orderBy('timestamp', 'desc').get().then((snapshot) => {
-    let visits = 0, logins = 0;
+    let visits = 0, logins = 0, letterReads = 0;
     const items = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
       if(data.type === 'visit') visits++;
       if(data.type === 'login') logins++;
+      if(data.type === 'letter_read') letterReads++;
       items.push(data);
     });
 
     document.getElementById('visitCount').textContent = visits;
     document.getElementById('loginCount').textContent = logins;
+    document.getElementById('letterCount').textContent = letterReads;
 
     const list = document.getElementById('activityList');
     list.innerHTML = '';
@@ -211,7 +240,8 @@ function loadStats(){
       li.className = 'activity-item';
       const date = item.timestamp ? item.timestamp.toDate() : new Date();
       const dateStr = date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-      li.innerHTML = `<span>${dateStr}</span><span class="tag ${item.type}">${item.type === 'visit' ? 'visita' : 'login'}</span>`;
+      const typeLabels = { visit: 'visita', login: 'login', letter_read: 'carta leída' };
+      li.innerHTML = `<span>${dateStr}</span><span class="tag ${item.type}">${typeLabels[item.type] || item.type}</span>`;
       list.appendChild(li);
     });
 
