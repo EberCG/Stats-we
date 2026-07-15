@@ -91,6 +91,12 @@
   .tag.visit{background:rgba(177,153,255,0.2);color:var(--accent-violet);}
   .tag.login{background:rgba(255,122,176,0.2);color:var(--pink-glow);}
   .tag.letter_read{background:rgba(255,206,122,0.2);color:#ffce7a;}
+  .user-badge{
+    font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600;
+    background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);
+  }
+  .user-badge.Mor{background:rgba(255,122,176,0.18);color:var(--pink-glow);}
+  .user-badge.Admin{background:rgba(177,153,255,0.18);color:var(--accent-violet);}
 
   .star-btn{
     background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;
@@ -376,10 +382,12 @@ function loadStats(){
 function buildActivityItemHTML(item){
   const dateStr = item.date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
   const isFav = favoriteIds.has(item.id);
+  const userBadge = item.user ? `<span class="user-badge ${item.user}">${item.user} ⭐</span>` : '';
   return `<li class="activity-item" data-id="${item.id}">
       <div class="activity-item-main">
         <span>${dateStr}</span>
         <span class="tag ${item.type}">${typeLabels[item.type] || item.type}</span>
+        ${userBadge}
       </div>
       <button class="star-btn ${isFav ? 'starred' : ''}" data-id="${item.id}" title="${isFav ? 'Quitar de favoritos' : 'Guardar como favorito'}">★</button>
     </li>`;
