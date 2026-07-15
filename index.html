@@ -84,6 +84,7 @@
     background:rgba(255,255,255,0.04);margin-bottom:8px;
     color:rgba(255,255,255,0.75);font-size:.82rem;
   }
+  .activity-item-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .activity-item .tag{
     font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600;
   }
@@ -91,13 +92,63 @@
   .tag.login{background:rgba(255,122,176,0.2);color:var(--pink-glow);}
   .tag.letter_read{background:rgba(255,206,122,0.2);color:#ffce7a;}
 
+  .star-btn{
+    background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;
+    padding:2px 4px;color:rgba(255,255,255,0.25);flex-shrink:0;
+  }
+  .star-btn.starred{color:#ffce7a;}
+
+  .empty-msg{
+    color:rgba(255,255,255,0.35);font-size:.8rem;text-align:center;
+    padding:18px 10px;background:rgba(255,255,255,0.02);border-radius:10px;list-style:none;
+  }
+
   .letter-reset-btn{
-    display:block;width:100%;margin:0 auto 10px;padding:14px;border-radius:14px;
+    display:block;width:100%;margin:0 auto 22px;padding:14px;border-radius:14px;
     border:1px solid rgba(255,206,122,0.4);
     background:linear-gradient(135deg, rgba(255,206,122,0.22), rgba(255,122,176,0.12));
     color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;font-size:.9rem;
     cursor:pointer;
   }
+
+  /* Tabs */
+  .tab-bar{display:flex;gap:8px;margin-bottom:20px;}
+  .tab-btn{
+    flex:1;padding:10px 4px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.55);
+    font-family:'Quicksand',sans-serif;font-weight:600;font-size:.78rem;cursor:pointer;
+  }
+  .tab-btn.active{
+    background:linear-gradient(135deg, rgba(255,122,176,0.28), rgba(177,153,255,0.28));
+    border-color:rgba(255,255,255,0.3);color:#fff;
+  }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* Calendario */
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .cal-nav-btn{
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);color:#fff;
+    border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer;
+  }
+  .cal-month-label{
+    color:var(--cloud-white);font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:1.15rem;text-transform:capitalize;
+  }
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;}
+  .cal-dow{text-align:center;color:rgba(255,255,255,0.4);font-size:.66rem;padding-bottom:4px;}
+  .cal-day{
+    aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    border-radius:10px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);
+    font-size:.8rem;cursor:pointer;position:relative;border:1px solid transparent;
+  }
+  .cal-day.empty{background:none;cursor:default;}
+  .cal-day.has-events::after{
+    content:'';position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;
+    background:var(--pink-glow);
+  }
+  .cal-day.today{color:var(--pink-glow);font-weight:700;}
+  .cal-day.selected{border-color:var(--accent-violet);background:rgba(177,153,255,0.18);color:#fff;}
 
   .refresh-btn, .logout-btn{
     display:block;margin:20px auto 0;padding:10px 20px;border-radius:20px;
@@ -139,9 +190,39 @@
         <div class="stat-label">cartas leídas</div>
       </div>
     </div>
+
     <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar carta de nuevo</button>
-    <p class="activity-title">Actividad reciente</p>
-    <ul class="activity-list" id="activityList"></ul>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="recent">Reciente</button>
+      <button class="tab-btn" data-tab="calendar">Calendario</button>
+      <button class="tab-btn" data-tab="favorites">Favoritos</button>
+    </div>
+
+    <!-- Pestaña: actividad reciente -->
+    <div class="tab-panel active" id="tab-recent">
+      <p class="activity-title">Actividad reciente</p>
+      <ul class="activity-list" id="activityList"></ul>
+    </div>
+
+    <!-- Pestaña: calendario -->
+    <div class="tab-panel" id="tab-calendar">
+      <div class="cal-header">
+        <button class="cal-nav-btn" id="calPrevBtn">‹</button>
+        <span class="cal-month-label" id="calMonthLabel"></span>
+        <button class="cal-nav-btn" id="calNextBtn">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <p class="activity-title" id="calDayTitle">Selecciona un día para ver su actividad</p>
+      <ul class="activity-list" id="calDayList"></ul>
+    </div>
+
+    <!-- Pestaña: favoritos -->
+    <div class="tab-panel" id="tab-favorites">
+      <p class="activity-title">Favoritos</p>
+      <ul class="activity-list" id="favoritesList"></ul>
+    </div>
+
     <p class="loading-msg" id="loadingMsg" style="display:none;">Cargando...</p>
     <button class="refresh-btn" id="refreshBtn">↻ Actualizar</button>
     <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
@@ -174,7 +255,22 @@ const db = firebase.firestore();
 
 const loginScreen = document.getElementById('loginScreen');
 const dashScreen = document.getElementById('dashScreen');
+const loadingMsg = document.getElementById('loadingMsg');
 
+const typeLabels = { visit: 'visita', login: 'login', letter_read: 'carta leída' };
+
+/* ------------------------------------------------------------
+   Estado en memoria
+   ------------------------------------------------------------ */
+let allEvents = [];            // [{id, type, date}], ordenado desc
+let eventsById = new Map();    // id -> item
+let favoriteIds = new Set();   // ids de eventos marcados como favoritos
+let currentCalDate = new Date();
+let selectedDay = null;
+
+/* ------------------------------------------------------------
+   Login / sesión
+   ------------------------------------------------------------ */
 document.getElementById('loginForm').addEventListener('submit', function(e){
   e.preventDefault();
   const email = document.getElementById('emailInput').value.trim();
@@ -214,42 +310,214 @@ document.getElementById('resetLetterBtn').addEventListener('click', function(){
 });
 document.getElementById('refreshBtn').addEventListener('click', loadStats);
 
+/* ------------------------------------------------------------
+   Pestañas
+   ------------------------------------------------------------ */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ------------------------------------------------------------
+   Carga de datos (eventos + favoritos)
+   ------------------------------------------------------------ */
 function loadStats(){
-  const loadingMsg = document.getElementById('loadingMsg');
   loadingMsg.style.display = 'block';
 
-  db.collection('events').orderBy('timestamp', 'desc').get().then((snapshot) => {
+  Promise.all([
+    db.collection('events').orderBy('timestamp', 'desc').get(),
+    db.collection('favorites').get()
+  ]).then(([eventsSnap, favSnap]) => {
+    allEvents = [];
+    eventsById = new Map();
+    favoriteIds = new Set();
+
+    favSnap.forEach(doc => favoriteIds.add(doc.id));
+
     let visits = 0, logins = 0, letterReads = 0;
-    const items = [];
-    snapshot.forEach((doc) => {
+    eventsSnap.forEach((doc) => {
       const data = doc.data();
+      const date = data.timestamp ? data.timestamp.toDate() : new Date();
+      const item = { id: doc.id, type: data.type, date };
+      allEvents.push(item);
+      eventsById.set(doc.id, item);
+
       if(data.type === 'visit') visits++;
       if(data.type === 'login') logins++;
       if(data.type === 'letter_read') letterReads++;
-      items.push(data);
     });
 
     document.getElementById('visitCount').textContent = visits;
     document.getElementById('loginCount').textContent = logins;
     document.getElementById('letterCount').textContent = letterReads;
 
-    const list = document.getElementById('activityList');
-    list.innerHTML = '';
-    items.slice(0, 15).forEach((item) => {
-      const li = document.createElement('li');
-      li.className = 'activity-item';
-      const date = item.timestamp ? item.timestamp.toDate() : new Date();
-      const dateStr = date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-      const typeLabels = { visit: 'visita', login: 'login', letter_read: 'carta leída' };
-      li.innerHTML = `<span>${dateStr}</span><span class="tag ${item.type}">${typeLabels[item.type] || item.type}</span>`;
-      list.appendChild(li);
-    });
+    renderRecentActivity();
+    renderCalendar();
+    renderFavorites();
 
     loadingMsg.style.display = 'none';
   }).catch(() => {
     loadingMsg.textContent = 'No se pudo cargar. Revisa tu conexión.';
   });
 }
+
+/* ------------------------------------------------------------
+   Construcción de filas de actividad (compartida entre pestañas)
+   ------------------------------------------------------------ */
+function buildActivityItemHTML(item){
+  const dateStr = item.date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+  const isFav = favoriteIds.has(item.id);
+  return `<li class="activity-item" data-id="${item.id}">
+      <div class="activity-item-main">
+        <span>${dateStr}</span>
+        <span class="tag ${item.type}">${typeLabels[item.type] || item.type}</span>
+      </div>
+      <button class="star-btn ${isFav ? 'starred' : ''}" data-id="${item.id}" title="${isFav ? 'Quitar de favoritos' : 'Guardar como favorito'}">★</button>
+    </li>`;
+}
+
+function renderRecentActivity(){
+  const list = document.getElementById('activityList');
+  const recent = allEvents.slice(0, 15);
+  list.innerHTML = recent.length
+    ? recent.map(buildActivityItemHTML).join('')
+    : '<li class="empty-msg">Todavía no hay actividad registrada</li>';
+}
+
+/* ------------------------------------------------------------
+   Calendario mensual
+   ------------------------------------------------------------ */
+const calMonthLabel = document.getElementById('calMonthLabel');
+const calGrid = document.getElementById('calGrid');
+const calDayTitle = document.getElementById('calDayTitle');
+const calDayList = document.getElementById('calDayList');
+
+function renderCalendar(){
+  const year = currentCalDate.getFullYear();
+  const month = currentCalDate.getMonth();
+
+  calMonthLabel.textContent = currentCalDate.toLocaleString('es-MX', {month:'long', year:'numeric'});
+
+  const firstDay = new Date(year, month, 1);
+  const startOffset = firstDay.getDay(); // 0 = domingo
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const dayHasEvents = new Set();
+  allEvents.forEach(ev => {
+    if(ev.date.getFullYear() === year && ev.date.getMonth() === month){
+      dayHasEvents.add(ev.date.getDate());
+    }
+  });
+
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+  const dows = ['D','L','M','M','J','V','S'];
+  let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  for(let i = 0; i < startOffset; i++){
+    html += '<div class="cal-day empty"></div>';
+  }
+
+  for(let d = 1; d <= daysInMonth; d++){
+    const classes = ['cal-day'];
+    if(dayHasEvents.has(d)) classes.push('has-events');
+    if(isCurrentMonth && d === today.getDate()) classes.push('today');
+    if(selectedDay && selectedDay.getFullYear() === year && selectedDay.getMonth() === month && selectedDay.getDate() === d){
+      classes.push('selected');
+    }
+    html += `<div class="${classes.join(' ')}" data-day="${d}">${d}</div>`;
+  }
+
+  calGrid.innerHTML = html;
+  renderCalendarDetail();
+}
+
+function renderCalendarDetail(){
+  if(!selectedDay){
+    calDayTitle.textContent = 'Selecciona un día para ver su actividad';
+    calDayList.innerHTML = '';
+    return;
+  }
+  const dayItems = allEvents.filter(ev =>
+    ev.date.getFullYear() === selectedDay.getFullYear() &&
+    ev.date.getMonth() === selectedDay.getMonth() &&
+    ev.date.getDate() === selectedDay.getDate()
+  );
+  const dayLabel = selectedDay.toLocaleString('es-MX', {day:'numeric', month:'long', year:'numeric'});
+  calDayTitle.textContent = `${dayLabel} · ${dayItems.length} registro${dayItems.length === 1 ? '' : 's'}`;
+  calDayList.innerHTML = dayItems.length
+    ? dayItems.map(buildActivityItemHTML).join('')
+    : '<li class="empty-msg">Sin registros ese día</li>';
+}
+
+calGrid.addEventListener('click', (e) => {
+  const cell = e.target.closest('.cal-day');
+  if(!cell || cell.classList.contains('empty')) return;
+  const day = parseInt(cell.dataset.day, 10);
+  selectedDay = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth(), day);
+  renderCalendar();
+});
+
+document.getElementById('calPrevBtn').addEventListener('click', () => {
+  currentCalDate = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() - 1, 1);
+  selectedDay = null;
+  renderCalendar();
+});
+document.getElementById('calNextBtn').addEventListener('click', () => {
+  currentCalDate = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() + 1, 1);
+  selectedDay = null;
+  renderCalendar();
+});
+
+/* ------------------------------------------------------------
+   Favoritos
+   ------------------------------------------------------------ */
+function renderFavorites(){
+  const favList = document.getElementById('favoritesList');
+  const favItems = allEvents.filter(ev => favoriteIds.has(ev.id));
+  favList.innerHTML = favItems.length
+    ? favItems.map(buildActivityItemHTML).join('')
+    : '<li class="empty-msg">Aún no tienes favoritos. Toca la ⭐ en un registro para guardarlo aquí.</li>';
+}
+
+function toggleFavorite(item){
+  if(favoriteIds.has(item.id)){
+    db.collection('favorites').doc(item.id).delete().then(() => {
+      favoriteIds.delete(item.id);
+      renderRecentActivity();
+      renderCalendarDetail();
+      renderFavorites();
+    });
+  } else {
+    db.collection('favorites').doc(item.id).set({
+      type: item.type,
+      timestamp: firebase.firestore.Timestamp.fromDate(item.date),
+      favoritedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      favoriteIds.add(item.id);
+      renderRecentActivity();
+      renderCalendarDetail();
+      renderFavorites();
+    });
+  }
+}
+
+function handleStarClick(e){
+  const btn = e.target.closest('.star-btn');
+  if(!btn) return;
+  const item = eventsById.get(btn.dataset.id);
+  if(!item) return;
+  toggleFavorite(item);
+}
+
+document.getElementById('activityList').addEventListener('click', handleStarClick);
+document.getElementById('calDayList').addEventListener('click', handleStarClick);
+document.getElementById('favoritesList').addEventListener('click', handleStarClick);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
