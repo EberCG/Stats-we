@@ -327,16 +327,21 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
    ------------------------------------------------------------ */
 function loadStats(){
   loadingMsg.style.display = 'block';
+  loadingMsg.textContent = 'Cargando...';
 
-  Promise.all([
-    db.collection('events').orderBy('timestamp', 'desc').get(),
-    db.collection('favorites').get()
-  ]).then(([eventsSnap, favSnap]) => {
+  const eventsPromise = db.collection('events').orderBy('timestamp', 'desc').get();
+  // Si la colección "favorites" aún no tiene reglas o falla por otro motivo,
+  // seguimos mostrando la actividad normal en vez de romper todo el panel.
+  const favoritesPromise = db.collection('favorites').get().catch(() => null);
+
+  Promise.all([eventsPromise, favoritesPromise]).then(([eventsSnap, favSnap]) => {
     allEvents = [];
     eventsById = new Map();
     favoriteIds = new Set();
 
-    favSnap.forEach(doc => favoriteIds.add(doc.id));
+    if(favSnap){
+      favSnap.forEach(doc => favoriteIds.add(doc.id));
+    }
 
     let visits = 0, logins = 0, letterReads = 0;
     eventsSnap.forEach((doc) => {
@@ -492,6 +497,8 @@ function toggleFavorite(item){
       renderRecentActivity();
       renderCalendarDetail();
       renderFavorites();
+    }).catch(() => {
+      console.error('No se pudo quitar de favoritos. Revisa las reglas de Firestore para "favorites".');
     });
   } else {
     db.collection('favorites').doc(item.id).set({
@@ -503,6 +510,8 @@ function toggleFavorite(item){
       renderRecentActivity();
       renderCalendarDetail();
       renderFavorites();
+    }).catch(() => {
+      console.error('No se pudo guardar el favorito. Revisa las reglas de Firestore para "favorites".');
     });
   }
 }
