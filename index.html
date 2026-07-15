@@ -353,7 +353,7 @@ function loadStats(){
     eventsSnap.forEach((doc) => {
       const data = doc.data();
       const date = data.timestamp ? data.timestamp.toDate() : new Date();
-      const item = { id: doc.id, type: data.type, date };
+      const item = { id: doc.id, type: data.type, date, user: data.user };
       allEvents.push(item);
       eventsById.set(doc.id, item);
 
