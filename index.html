@@ -361,6 +361,49 @@
   </div>
 </div>
 
+<!-- ---------- VISTA PREVIA DE LA CARTA (solo local) ---------- -->
+<div class="preview-overlay" id="previewOverlay">
+  <button class="preview-close" id="previewCloseBtn">✕</button>
+
+  <div class="preview-warning" id="previewWarning">
+    <div class="icon">💌</div>
+    <p class="title">Vista previa</p>
+    <p class="sub">Esto es exactamente lo que ella va a ver. Nada de lo que hagas aquí se guarda ni le llega a su celular.</p>
+    <button class="letter-reset-btn" id="previewOpenBtn" style="margin:0;">Abrir carta</button>
+  </div>
+
+  <div class="preview-scroll" id="previewScroll">
+    <div class="preview-rod"></div>
+    <div class="preview-paper" id="previewPaper">
+      <p class="preview-meta" id="previewMeta">Para: Mi futura esposa. &nbsp;|&nbsp; 15 Jul 26</p>
+
+      <p class="preview-spoiler-hint">toca para leer 💭</p>
+      <div class="preview-spoiler" id="previewSpoiler">
+        <div class="preview-body" id="previewBody">
+          <p>Mor, quiero aprovechar q estás durmiendo aquí, encima de mí, para escribirte algunas cosas q siento.</p>
+          <p>Me gustas mucho.</p>
+          <p>Desde aquel primer mensaje q me mandaste pidiendo la tarea ya sentía una chispa dentro de mí, y lo confirmé cuando te vi por primera vez.</p>
+          <p>Pude notar en tus bonitos ojos q algo más vendría para nosotros.</p>
+          <p>Sé q el camino no es ni ah sido para nada fácil, pero me doy cuenta de q ambos seguimos aquí, juntos, y eso me hace muy feliz.</p>
+          <p>Me gusta mucho tu cuerpo, y no solo en lo sexual; me encanta tu olor y cómo se siente tu cuerpo pegadito al mío.</p>
+          <p>Me gustas muchísimo, mor.</p>
+          <p>Me encantan tus ojos, tu sonrisa y esa carita que pones cuando quieres algo, jjsjs traviesilla...</p>
+          <p>Me gusta hasta cuando te enojas y haces berrinche, o cuando me alimentas, porque no solo llenas mi pancita, también alimentas mi alma.</p>
+          <p>Me gusta caminar de la mano contigo sin importar nada más.</p>
+          <p>Me encanta cuando hago cualquier cosita no sé qué sea, que te gusta y me regalas esa sonrisa de enamorada.</p>
+          <p>Simplemente te amo demasiado mujer mía.</p>
+        </div>
+      </div>
+
+      <p class="preview-ps" id="previewPs">Pd: quiero q sepas q mi deseo es avivar la chispa todos los días contigo. Estoy aquí para buscar aligerar tus días, cuidar nuestra magia y hacerte feliz lo más q pueda ✨♥️🌙</p>
+      <p class="preview-signature" id="previewSignature">Con amor, E.C.</p>
+
+      <button class="letter-reset-btn" id="previewLeidoBtn" style="margin:6px auto 4px;">Leído</button>
+    </div>
+    <div class="preview-rod"></div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore-compat.js"></script>
@@ -787,49 +830,6 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
-
-<!-- ---------- VISTA PREVIA DE LA CARTA (solo local) ---------- -->
-<div class="preview-overlay" id="previewOverlay">
-  <button class="preview-close" id="previewCloseBtn">✕</button>
-
-  <div class="preview-warning" id="previewWarning">
-    <div class="icon">💌</div>
-    <p class="title">Vista previa</p>
-    <p class="sub">Esto es exactamente lo que ella va a ver. Nada de lo que hagas aquí se guarda ni le llega a su celular.</p>
-    <button class="letter-reset-btn" id="previewOpenBtn" style="margin:0;">Abrir carta</button>
-  </div>
-
-  <div class="preview-scroll" id="previewScroll">
-    <div class="preview-rod"></div>
-    <div class="preview-paper" id="previewPaper">
-      <p class="preview-meta" id="previewMeta">Para: Mi futura esposa. &nbsp;|&nbsp; 15 Jul 26</p>
-
-      <p class="preview-spoiler-hint">toca para leer 💭</p>
-      <div class="preview-spoiler" id="previewSpoiler">
-        <div class="preview-body" id="previewBody">
-          <p>Mor, quiero aprovechar q estás durmiendo aquí, encima de mí, para escribirte algunas cosas q siento.</p>
-          <p>Me gustas mucho.</p>
-          <p>Desde aquel primer mensaje q me mandaste pidiendo la tarea ya sentía una chispa dentro de mí, y lo confirmé cuando te vi por primera vez.</p>
-          <p>Pude notar en tus bonitos ojos q algo más vendría para nosotros.</p>
-          <p>Sé q el camino no es ni ah sido para nada fácil, pero me doy cuenta de q ambos seguimos aquí, juntos, y eso me hace muy feliz.</p>
-          <p>Me gusta mucho tu cuerpo, y no solo en lo sexual; me encanta tu olor y cómo se siente tu cuerpo pegadito al mío.</p>
-          <p>Me gustas muchísimo, mor.</p>
-          <p>Me encantan tus ojos, tu sonrisa y esa carita que pones cuando quieres algo, jjsjs traviesilla...</p>
-          <p>Me gusta hasta cuando te enojas y haces berrinche, o cuando me alimentas, porque no solo llenas mi pancita, también alimentas mi alma.</p>
-          <p>Me gusta caminar de la mano contigo sin importar nada más.</p>
-          <p>Me encanta cuando hago cualquier cosita no sé qué sea, que te gusta y me regalas esa sonrisa de enamorada.</p>
-          <p>Simplemente te amo demasiado mujer mía.</p>
-        </div>
-      </div>
-
-      <p class="preview-ps" id="previewPs">Pd: quiero q sepas q mi deseo es avivar la chispa todos los días contigo. Estoy aquí para buscar aligerar tus días, cuidar nuestra magia y hacerte feliz lo más q pueda ✨♥️🌙</p>
-      <p class="preview-signature" id="previewSignature">Con amor, E.C.</p>
-
-      <button class="letter-reset-btn" id="previewLeidoBtn" style="margin:6px auto 4px;">Leído</button>
-    </div>
-    <div class="preview-rod"></div>
-  </div>
-</div>
 
 </body>
 </html>
