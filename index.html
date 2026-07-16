@@ -322,8 +322,8 @@
       <p class="save-msg" id="saveMsg"></p>
     </div>
 
-    <button class="letter-reset-btn" id="previewLetterBtn" style="background:linear-gradient(135deg, rgba(177,153,255,0.22), rgba(255,255,255,0.08));border-color:rgba(177,153,255,0.4);">👁️ Vista previa (solo aquí, no le llega a ella)</button>
-    <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar carta de nuevo (esto SÍ le llega a ella)</button>
+    <button class="letter-reset-btn" id="previewLetterBtn" style="background:linear-gradient(135deg, rgba(177,153,255,0.22), rgba(255,255,255,0.08));border-color:rgba(177,153,255,0.4);">Vista previa </button>
+    <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar/Enviar </button>
 
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="recent">Reciente</button>
@@ -518,7 +518,7 @@ document.getElementById('resetLetterBtn').addEventListener('click', function(){
     resetAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     const original = btn.textContent;
-    btn.textContent = '💌 Enviado, volverá a aparecer';
+    btn.textContent = '💌 Enviado';
     setTimeout(() => { btn.textContent = original; }, 2000);
     setTimeout(renderLetterStatus, 1200); // le da un momento a que el servidor confirme la hora
   }).catch(() => {
@@ -785,7 +785,7 @@ document.getElementById('saveLetterBtn').addEventListener('click', function(){
     signature: document.getElementById('editSignature').value
   };
   db.collection('letter').doc('content').set(data).then(() => {
-    saveMsg.textContent = '✅ Guardado — al presionar "Mostrar carta de nuevo" ya se usará este texto.';
+    saveMsg.textContent = '✅ Guardado ';
   }).catch(() => {
     saveMsg.textContent = 'No se pudo guardar, revisa tu conexión.';
   });
