@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estadísticas - Para ti</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Dancing+Script:wght@500;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest-stats.json">
 <meta name="theme-color" content="#050416">
 <link rel="icon" href="stats-icon-192.png">
@@ -162,6 +162,113 @@
     font-family:'Quicksand',sans-serif;font-size:.8rem;cursor:pointer;
   }
   .loading-msg{color:rgba(255,255,255,0.5);text-align:center;font-size:.85rem;margin-top:20px;}
+  /* ---------- VISTA PREVIA DE LA CARTA (solo local, no toca Firebase) ---------- */
+  .letter-status{
+    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
+    border-radius:14px;padding:14px 16px;margin-bottom:14px;
+    color:rgba(255,255,255,0.8);font-size:.85rem;text-align:center;
+  }
+
+  .letter-editor{
+    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
+    border-radius:14px;padding:16px;margin-bottom:14px;text-align:left;
+  }
+  .letter-editor .editor-title{
+    color:var(--cloud-white);font-size:.9rem;font-weight:600;margin:0 0 12px;
+  }
+  .letter-editor label{
+    display:block;color:rgba(255,255,255,0.55);font-size:.72rem;margin:10px 0 4px;
+  }
+  .letter-editor input, .letter-editor textarea{
+    width:100%;padding:10px 12px;border-radius:10px;
+    border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);
+    color:#fff;font-size:14px;font-family:'Quicksand',sans-serif;
+    outline:none;resize:vertical;
+  }
+  .letter-editor input:focus, .letter-editor textarea:focus{border-color:var(--accent-violet);}
+  .save-msg{color:rgba(255,255,255,0.5);font-size:.75rem;margin:10px 0 0;text-align:center;}
+  .preview-overlay{
+    display:none;position:fixed;inset:0;z-index:9998;
+    background:radial-gradient(ellipse at center, #14103a 0%, var(--space-black) 80%);
+    align-items:center;justify-content:center;padding:24px;
+  }
+  .preview-overlay.show{display:flex;}
+  .preview-close{
+    position:absolute;top:5%;right:5%;z-index:10;
+    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);
+    color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;
+  }
+  .preview-warning{
+    position:relative;z-index:2;text-align:center;width:min(340px,88vw);
+    background:linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
+    border:1px solid rgba(255,255,255,0.25);backdrop-filter:blur(18px) saturate(180%);
+    -webkit-backdrop-filter:blur(18px) saturate(180%);
+    border-radius:20px;padding:36px 30px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .preview-warning .icon{font-size:2rem;margin-bottom:10px;}
+  .preview-warning .title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
+    color:var(--cloud-white);font-size:1.3rem;margin:0 0 14px;
+  }
+  .preview-warning .sub{color:rgba(255,255,255,0.65);font-size:.82rem;line-height:1.5;margin:0 0 24px;}
+
+  .preview-scroll{
+    display:none;position:relative;z-index:2;width:min(420px,90vw);
+    max-height:88vh;flex-direction:column;align-items:center;
+  }
+  .preview-scroll.show{display:flex;}
+  .preview-rod{
+    width:88%;height:16px;border-radius:10px;flex-shrink:0;
+    background:linear-gradient(180deg, #8a5a34, #5c3a20);box-shadow:0 3px 8px rgba(0,0,0,0.4);
+  }
+  .preview-paper{
+    width:100%;background:linear-gradient(135deg, #f3e6c8, #e8d3a3);color:#4a3520;
+    padding:30px 26px;overflow-y:auto;max-height:74vh;
+    box-shadow:inset 0 0 40px rgba(120,85,40,0.3), 0 10px 30px rgba(0,0,0,0.4);
+    clip-path:inset(50% 0 50% 0);
+  }
+  .preview-paper.unrolling{animation:preview-unroll 1.2s cubic-bezier(.2,.8,.3,1) forwards;}
+  @keyframes preview-unroll{
+    0%{clip-path:inset(50% 0 50% 0);}
+    100%{clip-path:inset(0% 0 0% 0);}
+  }
+  .preview-meta{
+    font-family:'Quicksand',sans-serif;font-weight:600;font-size:.8rem;
+    text-align:center;margin:0 0 20px;letter-spacing:.3px;color:#6b4a26;
+  }
+  .preview-spoiler-hint{
+    text-align:center;font-family:'Quicksand',sans-serif;font-size:.72rem;
+    color:#8a6a3d;margin:0 0 8px;
+  }
+  .preview-body p{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:1.05rem;line-height:1.7;margin:0 0 14px;
+  }
+  .preview-ps{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:.95rem;line-height:1.6;margin:22px 0 4px;color:#6b4a26;
+  }
+  .preview-signature{
+    font-family:'Dancing Script',cursive;font-weight:700;
+    font-size:1.6rem;text-align:right;margin:8px 0 22px;color:#5c3a20;
+  }
+  .preview-spoiler{
+    position:relative;cursor:pointer;user-select:none;filter:blur(6px);
+    transition:filter .4s ease;padding:6px;border-radius:8px;margin-bottom:6px;
+  }
+  .preview-spoiler.revealed{filter:blur(0);}
+  .preview-spoiler::before, .preview-spoiler::after{
+    content:"✨";position:absolute;font-size:.85rem;
+    animation:preview-sparkle 1.5s ease-in-out infinite;pointer-events:none;
+  }
+  .preview-spoiler::before{top:-2px;left:-2px;}
+  .preview-spoiler::after{bottom:-2px;right:-2px;animation-delay:.5s;}
+  .preview-spoiler.revealed::before, .preview-spoiler.revealed::after{display:none;}
+  @keyframes preview-sparkle{
+    0%,100%{opacity:.3;transform:scale(0.8) rotate(0deg);}
+    50%{opacity:1;transform:scale(1.15) rotate(15deg);}
+  }
 </style>
 </head>
 <body>
@@ -197,7 +304,26 @@
       </div>
     </div>
 
-    <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar carta de nuevo</button>
+    <div class="letter-status" id="letterStatus">Cargando estado de la carta...</div>
+
+    <div class="letter-editor">
+      <p class="editor-title">✏️ Editar la carta</p>
+      <label>Dedicatoria</label>
+      <input type="text" id="editDedication" placeholder="Mi futura esposa.">
+      <label>Fecha</label>
+      <input type="text" id="editDate" placeholder="15 Jul 26">
+      <label>Contenido (separa cada párrafo dejando una línea en blanco entre uno y otro)</label>
+      <textarea id="editBody" rows="10"></textarea>
+      <label>Posdata</label>
+      <textarea id="editPs" rows="3"></textarea>
+      <label>Firma</label>
+      <input type="text" id="editSignature" placeholder="Con amor, E.C.">
+      <button class="letter-reset-btn" id="saveLetterBtn" style="margin-top:14px;">💾 Guardar cambios</button>
+      <p class="save-msg" id="saveMsg"></p>
+    </div>
+
+    <button class="letter-reset-btn" id="previewLetterBtn" style="background:linear-gradient(135deg, rgba(177,153,255,0.22), rgba(255,255,255,0.08));border-color:rgba(177,153,255,0.4);">👁️ Vista previa (solo aquí, no le llega a ella)</button>
+    <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar carta de nuevo (esto SÍ le llega a ella)</button>
 
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="recent">Reciente</button>
@@ -302,6 +428,47 @@ auth.onAuthStateChanged(function(user){
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
 
+/* ---------- VISTA PREVIA (100% local, no toca Firebase) ---------- */
+document.getElementById('previewLetterBtn').addEventListener('click', function(){
+  applyPreviewContent({
+    dedication: document.getElementById('editDedication').value,
+    date: document.getElementById('editDate').value,
+    body: document.getElementById('editBody').value,
+    ps: document.getElementById('editPs').value,
+    signature: document.getElementById('editSignature').value
+  });
+  document.getElementById('previewOverlay').classList.add('show');
+});
+
+function applyPreviewContent(data){
+  document.getElementById('previewMeta').innerHTML = `Para: ${data.dedication} &nbsp;|&nbsp; ${data.date}`;
+  const paragraphs = data.body.split('\n\n').map(p => p.trim()).filter(Boolean);
+  document.getElementById('previewBody').innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('previewPs').textContent = data.ps;
+  document.getElementById('previewSignature').textContent = data.signature;
+}
+document.getElementById('previewCloseBtn').addEventListener('click', closePreview);
+document.getElementById('previewOpenBtn').addEventListener('click', function(){
+  document.getElementById('previewWarning').style.display = 'none';
+  const scroll = document.getElementById('previewScroll');
+  scroll.classList.add('show');
+  requestAnimationFrame(() => {
+    document.getElementById('previewPaper').classList.add('unrolling');
+  });
+});
+document.getElementById('previewSpoiler').addEventListener('click', function(){
+  this.classList.toggle('revealed');
+});
+document.getElementById('previewLeidoBtn').addEventListener('click', closePreview);
+
+function closePreview(){
+  document.getElementById('previewOverlay').classList.remove('show');
+  document.getElementById('previewWarning').style.display = '';
+  document.getElementById('previewScroll').classList.remove('show');
+  document.getElementById('previewPaper').classList.remove('unrolling');
+  document.getElementById('previewSpoiler').classList.remove('revealed');
+}
+
 document.getElementById('resetLetterBtn').addEventListener('click', function(){
   const btn = this;
   db.collection('letter').doc('trigger').set({
@@ -369,6 +536,8 @@ function loadStats(){
     renderRecentActivity();
     renderCalendar();
     renderFavorites();
+    renderLetterStatus();
+    loadLetterEditor();
 
     loadingMsg.style.display = 'none';
   }).catch(() => {
@@ -490,6 +659,82 @@ document.getElementById('calNextBtn').addEventListener('click', () => {
 /* ------------------------------------------------------------
    Favoritos
    ------------------------------------------------------------ */
+function renderLetterStatus(){
+  const box = document.getElementById('letterStatus');
+  const read = allEvents.find(ev => ev.type === 'letter_read');
+  if(read){
+    const dateStr = read.date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+    box.textContent = `✅ La leyó ${dateStr}`;
+  } else {
+    box.textContent = '⏳ Aún no la ha leído';
+  }
+}
+
+/* ---------- EDITOR DE LA CARTA ---------- */
+let editorLoaded = false; // solo se carga una vez, para no borrar lo que estés escribiendo si le das "Actualizar"
+function loadLetterEditor(){
+  if(editorLoaded) return;
+  db.collection('letter').doc('content').get().then((doc) => {
+    editorLoaded = true;
+    if(doc.exists){
+      const d = doc.data();
+      document.getElementById('editDedication').value = d.dedication || '';
+      document.getElementById('editDate').value = d.date || '';
+      document.getElementById('editBody').value = d.body || '';
+      document.getElementById('editPs').value = d.ps || '';
+      document.getElementById('editSignature').value = d.signature || '';
+    } else {
+      // primera vez: no hay nada guardado todavía, se precarga con el texto original
+      document.getElementById('editDedication').value = 'Mi futura esposa.';
+      document.getElementById('editDate').value = '15 Jul 26';
+      document.getElementById('editBody').value =
+`Mor, quiero aprovechar q estás durmiendo aquí, encima de mí, para escribirte algunas cosas q siento.
+
+Me gustas mucho.
+
+Desde aquel primer mensaje q me mandaste pidiendo la tarea ya sentía una chispa dentro de mí, y lo confirmé cuando te vi por primera vez.
+
+Pude notar en tus bonitos ojos q algo más vendría para nosotros.
+
+Sé q el camino no es ni ah sido para nada fácil, pero me doy cuenta de q ambos seguimos aquí, juntos, y eso me hace muy feliz.
+
+Me gusta mucho tu cuerpo, y no solo en lo sexual; me encanta tu olor y cómo se siente tu cuerpo pegadito al mío.
+
+Me gustas muchísimo, mor.
+
+Me encantan tus ojos, tu sonrisa y esa carita que pones cuando quieres algo, jjsjs traviesilla...
+
+Me gusta hasta cuando te enojas y haces berrinche, o cuando me alimentas, porque no solo llenas mi pancita, también alimentas mi alma.
+
+Me gusta caminar de la mano contigo sin importar nada más.
+
+Me encanta cuando hago cualquier cosita no sé qué sea, que te gusta y me regalas esa sonrisa de enamorada.
+
+Simplemente te amo demasiado mujer mía.`;
+      document.getElementById('editPs').value = 'Pd: quiero q sepas q mi deseo es avivar la chispa todos los días contigo. Estoy aquí para buscar aligerar tus días, cuidar nuestra magia y hacerte feliz lo más q pueda ✨♥️🌙';
+      document.getElementById('editSignature').value = 'Con amor, E.C.';
+    }
+  }).catch(() => {
+    document.getElementById('saveMsg').textContent = 'No se pudo cargar el editor, revisa tu conexión.';
+  });
+}
+
+document.getElementById('saveLetterBtn').addEventListener('click', function(){
+  const saveMsg = document.getElementById('saveMsg');
+  const data = {
+    dedication: document.getElementById('editDedication').value,
+    date: document.getElementById('editDate').value,
+    body: document.getElementById('editBody').value,
+    ps: document.getElementById('editPs').value,
+    signature: document.getElementById('editSignature').value
+  };
+  db.collection('letter').doc('content').set(data).then(() => {
+    saveMsg.textContent = '✅ Guardado — al presionar "Mostrar carta de nuevo" ya se usará este texto.';
+  }).catch(() => {
+    saveMsg.textContent = 'No se pudo guardar, revisa tu conexión.';
+  });
+});
+
 function renderFavorites(){
   const favList = document.getElementById('favoritesList');
   const favItems = allEvents.filter(ev => favoriteIds.has(ev.id));
@@ -542,6 +787,49 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<!-- ---------- VISTA PREVIA DE LA CARTA (solo local) ---------- -->
+<div class="preview-overlay" id="previewOverlay">
+  <button class="preview-close" id="previewCloseBtn">✕</button>
+
+  <div class="preview-warning" id="previewWarning">
+    <div class="icon">💌</div>
+    <p class="title">Vista previa</p>
+    <p class="sub">Esto es exactamente lo que ella va a ver. Nada de lo que hagas aquí se guarda ni le llega a su celular.</p>
+    <button class="letter-reset-btn" id="previewOpenBtn" style="margin:0;">Abrir carta</button>
+  </div>
+
+  <div class="preview-scroll" id="previewScroll">
+    <div class="preview-rod"></div>
+    <div class="preview-paper" id="previewPaper">
+      <p class="preview-meta" id="previewMeta">Para: Mi futura esposa. &nbsp;|&nbsp; 15 Jul 26</p>
+
+      <p class="preview-spoiler-hint">toca para leer 💭</p>
+      <div class="preview-spoiler" id="previewSpoiler">
+        <div class="preview-body" id="previewBody">
+          <p>Mor, quiero aprovechar q estás durmiendo aquí, encima de mí, para escribirte algunas cosas q siento.</p>
+          <p>Me gustas mucho.</p>
+          <p>Desde aquel primer mensaje q me mandaste pidiendo la tarea ya sentía una chispa dentro de mí, y lo confirmé cuando te vi por primera vez.</p>
+          <p>Pude notar en tus bonitos ojos q algo más vendría para nosotros.</p>
+          <p>Sé q el camino no es ni ah sido para nada fácil, pero me doy cuenta de q ambos seguimos aquí, juntos, y eso me hace muy feliz.</p>
+          <p>Me gusta mucho tu cuerpo, y no solo en lo sexual; me encanta tu olor y cómo se siente tu cuerpo pegadito al mío.</p>
+          <p>Me gustas muchísimo, mor.</p>
+          <p>Me encantan tus ojos, tu sonrisa y esa carita que pones cuando quieres algo, jjsjs traviesilla...</p>
+          <p>Me gusta hasta cuando te enojas y haces berrinche, o cuando me alimentas, porque no solo llenas mi pancita, también alimentas mi alma.</p>
+          <p>Me gusta caminar de la mano contigo sin importar nada más.</p>
+          <p>Me encanta cuando hago cualquier cosita no sé qué sea, que te gusta y me regalas esa sonrisa de enamorada.</p>
+          <p>Simplemente te amo demasiado mujer mía.</p>
+        </div>
+      </div>
+
+      <p class="preview-ps" id="previewPs">Pd: quiero q sepas q mi deseo es avivar la chispa todos los días contigo. Estoy aquí para buscar aligerar tus días, cuidar nuestra magia y hacerte feliz lo más q pueda ✨♥️🌙</p>
+      <p class="preview-signature" id="previewSignature">Con amor, E.C.</p>
+
+      <button class="letter-reset-btn" id="previewLeidoBtn" style="margin:6px auto 4px;">Leído</button>
+    </div>
+    <div class="preview-rod"></div>
+  </div>
+</div>
 
 </body>
 </html>
