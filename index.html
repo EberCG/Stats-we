@@ -520,6 +520,7 @@ document.getElementById('resetLetterBtn').addEventListener('click', function(){
     const original = btn.textContent;
     btn.textContent = '💌 Enviado, volverá a aparecer';
     setTimeout(() => { btn.textContent = original; }, 2000);
+    setTimeout(renderLetterStatus, 1200); // le da un momento a que el servidor confirme la hora
   }).catch(() => {
     btn.textContent = 'No se pudo, revisa tu conexión';
   });
@@ -704,13 +705,25 @@ document.getElementById('calNextBtn').addEventListener('click', () => {
    ------------------------------------------------------------ */
 function renderLetterStatus(){
   const box = document.getElementById('letterStatus');
-  const read = allEvents.find(ev => ev.type === 'letter_read');
-  if(read){
-    const dateStr = read.date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-    box.textContent = `✅ La leyó ${dateStr}`;
-  } else {
-    box.textContent = '⏳ Aún no la ha leído';
-  }
+  box.textContent = 'Revisando estado...';
+
+  db.collection('letter').doc('trigger').get().then((triggerDoc) => {
+    const resetAt = (triggerDoc.exists && triggerDoc.data().resetAt) ? triggerDoc.data().resetAt.toMillis() : 0;
+    const read = allEvents.find(ev => ev.type === 'letter_read');
+    const readMillis = read ? read.date.getTime() : 0;
+
+    if(readMillis > 0 && readMillis >= resetAt){
+      const dateStr = read.date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+      box.textContent = `✅ La leyó ${dateStr}`;
+    } else if(resetAt > 0){
+      const dateStr = new Date(resetAt).toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+      box.textContent = `⏳ Se la mostraste de nuevo el ${dateStr} — todavía no la ha abierto`;
+    } else {
+      box.textContent = '⏳ Aún no la ha leído';
+    }
+  }).catch(() => {
+    box.textContent = 'No se pudo revisar el estado, actualiza la página.';
+  });
 }
 
 /* ---------- EDITOR DE LA CARTA ---------- */
