@@ -6,23 +6,30 @@
 <title>Estadísticas - Para ti</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Dancing+Script:wght@500;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest-stats.json">
-<meta name="theme-color" content="#050416">
+<meta name="theme-color" content="#fdf5ff">
 <link rel="icon" href="stats-icon-192.png">
 <link rel="apple-touch-icon" href="stats-icon-192.png">
 
 <!-- ================================================================
-     CSS — diseño y apariencia
+     CSS — diseño y apariencia (tema claro)
      ================================================================ -->
 <style>
   :root{
-    --violet-deep:#2b1a49;
-    --pink-glow:#ff7ab0;
-    --cloud-white:#f8f3ff;
-    --space-black:#050416;
-    --accent-violet:#b199ff;
+    --violet-deep:#7c5cbf;
+    --pink-glow:#e0447d;
+    --cloud-white:#ffffff;
+    --ink:#3a2e52;
+    --ink-soft:#7a6d99;
+    --ink-faint:#a89cc4;
+    --accent-violet:#7c5cd6;
+    --glass:rgba(255,255,255,0.62);
+    --glass-strong:rgba(255,255,255,0.85);
+    --glass-border:rgba(139,111,217,0.18);
+    --card-shadow:0 8px 26px rgba(139,111,217,0.14);
+    --bg-grad:linear-gradient(160deg, #fdf5ff 0%, #f1e6ff 45%, #ffe7f1 100%);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;min-height:100%;background:var(--space-black);font-family:'Quicksand',sans-serif;}
+  html,body{margin:0;padding:0;min-height:100%;background:var(--bg-grad);background-attachment:fixed;font-family:'Quicksand',sans-serif;}
   @supports (height: 100dvh){ html,body{min-height:100dvh;} }
 
   .screen{
@@ -32,25 +39,26 @@
   }
   @supports (height: 100dvh){ .screen{min-height:100dvh;} }
 
-  #loginScreen{background:radial-gradient(ellipse at center, #14103a 0%, var(--space-black) 70%);}
+  #loginScreen{background:radial-gradient(ellipse at top, #ffffff 0%, #f1e6ff 55%, #ffe0ee 100%);}
 
   .card{
     width:min(340px,90vw);
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.15);
+    background:var(--glass-strong);
+    border:1px solid var(--glass-border);
     backdrop-filter:blur(10px);
     border-radius:20px;
     padding:36px 30px;
     text-align:center;
+    box-shadow:var(--card-shadow);
   }
   .card h1{
     font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
-    color:var(--cloud-white);font-size:1.5rem;margin:0 0 22px;
+    color:var(--ink);font-size:1.5rem;margin:0 0 22px;
   }
   .card input{
     width:100%;padding:12px 14px;margin-bottom:12px;
-    border-radius:10px;border:1px solid rgba(255,255,255,0.2);
-    background:rgba(255,255,255,0.07);color:#fff;font-size:16px;
+    border-radius:10px;border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.7);color:var(--ink);font-size:16px;
     font-family:'Quicksand',sans-serif;outline:none;
   }
   .card input:focus{border-color:var(--accent-violet);}
@@ -60,73 +68,117 @@
     color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;
     font-size:.95rem;cursor:pointer;margin-top:6px;
   }
-  .error-msg{color:#ff9db3;font-size:.78rem;margin-top:12px;min-height:1em;}
+  .error-msg{color:#c8285c;font-size:.78rem;margin-top:12px;min-height:1em;}
 
-  #dashScreen{display:none;background:var(--space-black);align-items:flex-start;}
+  #dashScreen{display:none;background:var(--bg-grad);align-items:flex-start;}
   .dash-wrap{width:min(480px,92vw);margin:0 auto;padding:30px 0 60px;}
   .dash-title{
     font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
-    color:var(--cloud-white);font-size:1.4rem;text-align:center;margin:0 0 26px;
+    color:var(--ink);font-size:1.4rem;text-align:center;margin:0 0 26px;
   }
-  .stat-cards{display:flex;gap:14px;margin-bottom:30px;}
+
+  /* ---------- HUB PRINCIPAL ---------- */
+  .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px;}
+  .hub-card{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    padding:32px 14px;border-radius:20px;border:1px solid var(--glass-border);
+    background:var(--glass);box-shadow:var(--card-shadow);
+    cursor:pointer;transition:transform .2s ease, box-shadow .2s ease;
+    font-family:'Quicksand',sans-serif;
+  }
+  .hub-card:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(139,111,217,0.2);}
+  .hub-icon{font-size:2.1rem;}
+  .hub-label{color:var(--ink);font-weight:600;font-size:.88rem;}
+
+  /* ---------- SECCIONES ---------- */
+  .section-panel{display:none;}
+  .section-panel.active{display:block;}
+  .section-header{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;
+  }
+  .section-header.sticky{
+    position:sticky;top:0;z-index:5;
+    background:rgba(253,247,255,0.88);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    padding:12px 0 14px;margin:-4px 0 12px;
+    border-bottom:1px solid var(--glass-border);
+  }
+  .section-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
+    color:var(--ink);font-size:1.2rem;margin:0;
+  }
+  .back-btn{
+    background:none;border:none;color:var(--accent-violet);
+    font-family:'Quicksand',sans-serif;font-weight:600;font-size:.85rem;
+    cursor:pointer;padding:4px 0;
+  }
+  .refresh-btn-icon{
+    width:36px;height:36px;border-radius:50%;flex-shrink:0;
+    background:var(--glass);border:1px solid var(--glass-border);
+    color:var(--accent-violet);font-size:1.1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .header-spacer{width:36px;}
+
+  .stat-cards{display:flex;gap:14px;margin-bottom:26px;}
   .stat-card{
-    flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
-    border-radius:16px;padding:18px 10px;text-align:center;
+    flex:1;background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:16px;padding:18px 10px;text-align:center;box-shadow:var(--card-shadow);
   }
   .stat-num{color:var(--pink-glow);font-size:2rem;font-weight:700;font-family:'Quicksand',sans-serif;}
-  .stat-label{color:rgba(255,255,255,0.6);font-size:.75rem;margin-top:4px;}
+  .stat-label{color:var(--ink-soft);font-size:.75rem;margin-top:4px;}
 
-  .activity-title{color:var(--cloud-white);font-size:.9rem;margin:0 0 12px;font-weight:600;}
+  .activity-title{color:var(--ink);font-size:.9rem;margin:0 0 12px;font-weight:600;}
   .activity-list{list-style:none;padding:0;margin:0;}
   .activity-item{
     display:flex;justify-content:space-between;align-items:center;
     padding:10px 14px;border-radius:10px;
-    background:rgba(255,255,255,0.04);margin-bottom:8px;
-    color:rgba(255,255,255,0.75);font-size:.82rem;
+    background:var(--glass);margin-bottom:8px;border:1px solid var(--glass-border);
+    color:var(--ink);font-size:.82rem;
   }
   .activity-item-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .activity-item .tag{
     font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600;
   }
-  .tag.visit{background:rgba(177,153,255,0.2);color:var(--accent-violet);}
-  .tag.login{background:rgba(255,122,176,0.2);color:var(--pink-glow);}
-  .tag.letter_read{background:rgba(255,206,122,0.2);color:#ffce7a;}
+  .tag.visit{background:rgba(124,92,214,0.16);color:var(--accent-violet);}
+  .tag.login{background:rgba(224,68,125,0.14);color:var(--pink-glow);}
+  .tag.letter_read{background:rgba(201,138,31,0.16);color:#c98a1f;}
   .user-badge{
     font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600;
-    background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);
+    background:rgba(139,111,217,0.1);color:var(--ink-soft);
   }
-  .user-badge.Mor{background:rgba(255,122,176,0.18);color:var(--pink-glow);}
-  .user-badge.Admin{background:rgba(177,153,255,0.18);color:var(--accent-violet);}
+  .user-badge.Mor{background:rgba(224,68,125,0.14);color:var(--pink-glow);}
+  .user-badge.Admin{background:rgba(124,92,214,0.16);color:var(--accent-violet);}
 
   .star-btn{
     background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;
-    padding:2px 4px;color:rgba(255,255,255,0.25);flex-shrink:0;
+    padding:2px 4px;color:var(--ink-faint);flex-shrink:0;
   }
-  .star-btn.starred{color:#ffce7a;}
+  .star-btn.starred{color:#c98a1f;}
 
   .empty-msg{
-    color:rgba(255,255,255,0.35);font-size:.8rem;text-align:center;
-    padding:18px 10px;background:rgba(255,255,255,0.02);border-radius:10px;list-style:none;
+    color:var(--ink-faint);font-size:.8rem;text-align:center;
+    padding:18px 10px;background:rgba(139,111,217,0.05);border-radius:10px;list-style:none;
   }
 
   .letter-reset-btn{
-    display:block;width:100%;margin:0 auto 22px;padding:14px;border-radius:14px;
-    border:1px solid rgba(255,206,122,0.4);
-    background:linear-gradient(135deg, rgba(255,206,122,0.22), rgba(255,122,176,0.12));
-    color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;font-size:.9rem;
+    display:block;width:100%;margin:0 auto 14px;padding:14px;border-radius:14px;
+    border:1px solid rgba(224,68,125,0.3);
+    background:linear-gradient(135deg, rgba(255,206,122,0.4), rgba(224,68,125,0.14));
+    color:var(--ink);font-family:'Quicksand',sans-serif;font-weight:600;font-size:.9rem;
     cursor:pointer;
   }
 
   /* Tabs */
   .tab-bar{display:flex;gap:8px;margin-bottom:20px;}
   .tab-btn{
-    flex:1;padding:10px 4px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);
-    background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.55);
+    flex:1;padding:10px 4px;border-radius:12px;border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.4);color:var(--ink-soft);
     font-family:'Quicksand',sans-serif;font-weight:600;font-size:.78rem;cursor:pointer;
   }
   .tab-btn.active{
-    background:linear-gradient(135deg, rgba(255,122,176,0.28), rgba(177,153,255,0.28));
-    border-color:rgba(255,255,255,0.3);color:#fff;
+    background:linear-gradient(135deg, rgba(224,68,125,0.22), rgba(124,92,214,0.22));
+    border-color:rgba(139,111,217,0.35);color:var(--ink);
   }
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
@@ -134,18 +186,18 @@
   /* Calendario */
   .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .cal-nav-btn{
-    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);color:#fff;
+    background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);
     border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer;
   }
   .cal-month-label{
-    color:var(--cloud-white);font-family:'Cormorant Garamond',serif;font-style:italic;
+    color:var(--ink);font-family:'Cormorant Garamond',serif;font-style:italic;
     font-size:1.15rem;text-transform:capitalize;
   }
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;}
-  .cal-dow{text-align:center;color:rgba(255,255,255,0.4);font-size:.66rem;padding-bottom:4px;}
+  .cal-dow{text-align:center;color:var(--ink-faint);font-size:.66rem;padding-bottom:4px;}
   .cal-day{
     aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-    border-radius:10px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);
+    border-radius:10px;background:rgba(255,255,255,0.45);color:var(--ink-soft);
     font-size:.8rem;cursor:pointer;position:relative;border:1px solid transparent;
   }
   .cal-day.empty{background:none;cursor:default;}
@@ -154,42 +206,71 @@
     background:var(--pink-glow);
   }
   .cal-day.today{color:var(--pink-glow);font-weight:700;}
-  .cal-day.selected{border-color:var(--accent-violet);background:rgba(177,153,255,0.18);color:#fff;}
+  .cal-day.selected{border-color:var(--accent-violet);background:rgba(124,92,214,0.16);color:var(--ink);}
 
-  .refresh-btn, .logout-btn{
-    display:block;margin:20px auto 0;padding:10px 20px;border-radius:20px;
-    border:1px solid rgba(255,255,255,0.3);background:none;color:var(--cloud-white);
+  .logout-btn{
+    display:block;margin:26px auto 0;padding:10px 20px;border-radius:20px;
+    border:1px solid var(--glass-border);background:none;color:var(--ink-soft);
     font-family:'Quicksand',sans-serif;font-size:.8rem;cursor:pointer;
   }
-  .loading-msg{color:rgba(255,255,255,0.5);text-align:center;font-size:.85rem;margin-top:20px;}
-  /* ---------- VISTA PREVIA DE LA CARTA (solo local, no toca Firebase) ---------- */
-  .letter-status{
-    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
-    border-radius:14px;padding:14px 16px;margin-bottom:14px;
-    color:rgba(255,255,255,0.8);font-size:.85rem;text-align:center;
-  }
+  .loading-msg{color:var(--ink-faint);text-align:center;font-size:.85rem;margin-top:20px;}
 
+  /* ---------- CARTA: estado + editor ---------- */
+  .letter-status{
+    background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:14px;padding:14px 16px;margin-bottom:14px;
+    color:var(--ink);font-size:.85rem;text-align:center;box-shadow:var(--card-shadow);
+  }
   .letter-editor{
-    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
-    border-radius:14px;padding:16px;margin-bottom:14px;text-align:left;
+    background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:14px;padding:16px;margin-bottom:14px;text-align:left;box-shadow:var(--card-shadow);
   }
   .letter-editor .editor-title{
-    color:var(--cloud-white);font-size:.9rem;font-weight:600;margin:0 0 12px;
+    color:var(--ink);font-size:.9rem;font-weight:600;margin:0 0 12px;
   }
   .letter-editor label{
-    display:block;color:rgba(255,255,255,0.55);font-size:.72rem;margin:10px 0 4px;
+    display:block;color:var(--ink-soft);font-size:.72rem;margin:10px 0 4px;
   }
   .letter-editor input, .letter-editor textarea{
     width:100%;padding:10px 12px;border-radius:10px;
-    border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);
-    color:#fff;font-size:14px;font-family:'Quicksand',sans-serif;
+    border:1px solid var(--glass-border);background:rgba(255,255,255,0.65);
+    color:var(--ink);font-size:14px;font-family:'Quicksand',sans-serif;
     outline:none;resize:vertical;
   }
   .letter-editor input:focus, .letter-editor textarea:focus{border-color:var(--accent-violet);}
-  .save-msg{color:rgba(255,255,255,0.5);font-size:.75rem;margin:10px 0 0;text-align:center;}
+  .save-msg{color:var(--ink-faint);font-size:.75rem;margin:10px 0 0;text-align:center;}
+
+  /* ---------- CUPONES (vista admin) ---------- */
+  .coupon-admin-list{list-style:none;padding:0;margin:0;}
+  .coupon-admin-item{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--card-shadow);
+  }
+  .coupon-admin-main{display:flex;gap:12px;align-items:flex-start;}
+  .coupon-admin-icon{font-size:1.5rem;line-height:1.3;}
+  .coupon-admin-title{color:var(--ink);font-weight:600;font-size:.9rem;margin:0 0 2px;}
+  .coupon-admin-desc{color:var(--ink-soft);font-size:.78rem;margin:0 0 8px;}
+  .coupon-status{font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:20px;display:inline-block;}
+  .coupon-status.available{background:rgba(47,158,92,0.14);color:#2f9e5c;}
+  .coupon-status.redeemed{background:rgba(224,68,125,0.14);color:var(--pink-glow);}
+  .coupon-reset-btn{
+    flex-shrink:0;background:none;border:1px solid var(--glass-border);
+    border-radius:14px;padding:6px 10px;color:var(--accent-violet);
+    font-family:'Quicksand',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;
+  }
+
+  /* ---------- CÁPSULA DEL TIEMPO (configurar) ---------- */
+  .capsule-status{
+    background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:14px;padding:14px 16px;margin-bottom:14px;
+    color:var(--ink);font-size:.85rem;text-align:center;box-shadow:var(--card-shadow);
+  }
+
+  /* ---------- VISTA PREVIA DE LA CARTA (simula lo que ella ve, se queda oscura/inmersiva a propósito) ---------- */
   .preview-overlay{
     display:none;position:fixed;inset:0;z-index:9998;
-    background:radial-gradient(ellipse at center, #14103a 0%, var(--space-black) 80%);
+    background:radial-gradient(ellipse at center, #14103a 0%, #050416 80%);
     align-items:center;justify-content:center;padding:24px;
   }
   .preview-overlay.show{display:flex;}
@@ -209,9 +290,13 @@
   .preview-warning .icon{font-size:2rem;margin-bottom:10px;}
   .preview-warning .title{
     font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
-    color:var(--cloud-white);font-size:1.3rem;margin:0 0 14px;
+    color:#f8f3ff;font-size:1.3rem;margin:0 0 14px;
   }
   .preview-warning .sub{color:rgba(255,255,255,0.65);font-size:.82rem;line-height:1.5;margin:0 0 24px;}
+  .preview-warning .letter-reset-btn{
+    background:linear-gradient(135deg, rgba(255,206,122,0.3), rgba(255,122,176,0.18));
+    color:#fff;border:1px solid rgba(255,206,122,0.4);
+  }
 
   .preview-scroll{
     display:none;position:relative;z-index:2;width:min(420px,90vw);
@@ -288,76 +373,154 @@
 
 <div class="screen" id="dashScreen">
   <div class="dash-wrap">
-    <p class="dash-title">Actividad de "Para ti"</p>
-    <div class="stat-cards">
-      <div class="stat-card">
-        <div class="stat-num" id="visitCount">–</div>
-        <div class="stat-label">visitas</div>
+
+    <!-- ---------- HUB: pantalla principal ---------- -->
+    <div class="section-panel active" id="section-hub">
+      <p class="dash-title">Para ti · Panel</p>
+      <div class="hub-grid">
+        <button class="hub-card" data-section="letter">
+          <span class="hub-icon">💌</span>
+          <span class="hub-label">Carta</span>
+        </button>
+        <button class="hub-card" data-section="stats">
+          <span class="hub-icon">📊</span>
+          <span class="hub-label">Estadísticas</span>
+        </button>
+        <button class="hub-card" data-section="coupons">
+          <span class="hub-icon">🎟️</span>
+          <span class="hub-label">Cupones</span>
+        </button>
+        <button class="hub-card" data-section="capsule">
+          <span class="hub-icon">⏳</span>
+          <span class="hub-label">Cápsula del tiempo</span>
+        </button>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="loginCount">–</div>
-        <div class="stat-label">inicios de sesión</div>
+      <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
+    </div>
+
+    <!-- ---------- SECCIÓN: CARTA ---------- -->
+    <div class="section-panel" id="section-letter">
+      <div class="section-header">
+        <button class="back-btn" data-back>← volver</button>
+        <p class="section-title">Carta</p>
+        <span class="header-spacer"></span>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="letterCount">–</div>
-        <div class="stat-label">cartas leídas</div>
+
+      <div class="letter-status" id="letterStatus">Cargando estado de la carta...</div>
+
+      <div class="letter-editor">
+        <p class="editor-title">✏️ Editar la carta</p>
+        <label>Dedicatoria</label>
+        <input type="text" id="editDedication" placeholder="Mi futura esposa.">
+        <label>Fecha</label>
+        <input type="text" id="editDate" placeholder="15 Jul 26">
+        <label>Contenido (separa cada párrafo dejando una línea en blanco entre uno y otro)</label>
+        <textarea id="editBody" rows="10"></textarea>
+        <label>Posdata</label>
+        <textarea id="editPs" rows="3"></textarea>
+        <label>Firma</label>
+        <input type="text" id="editSignature" placeholder="Con amor, E.C.">
+        <button class="letter-reset-btn" id="saveLetterBtn" style="margin-top:14px;">💾 Guardar cambios</button>
+        <p class="save-msg" id="saveMsg"></p>
+      </div>
+
+      <button class="letter-reset-btn" id="previewLetterBtn" style="background:linear-gradient(135deg, rgba(124,92,214,0.18), rgba(255,255,255,0.5));border-color:rgba(124,92,214,0.4);">Vista previa </button>
+      <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar/Enviar </button>
+    </div>
+
+    <!-- ---------- SECCIÓN: ESTADÍSTICAS ---------- -->
+    <div class="section-panel" id="section-stats">
+      <div class="section-header sticky">
+        <button class="back-btn" data-back>← volver</button>
+        <p class="section-title">Estadísticas</p>
+        <button class="refresh-btn-icon" id="refreshBtn" title="Actualizar">↻</button>
+      </div>
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-num" id="visitCount">–</div>
+          <div class="stat-label">visitas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="loginCount">–</div>
+          <div class="stat-label">inicios de sesión</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="letterCount">–</div>
+          <div class="stat-label">cartas leídas</div>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="recent">Reciente</button>
+        <button class="tab-btn" data-tab="calendar">Calendario</button>
+        <button class="tab-btn" data-tab="favorites">Favoritos</button>
+      </div>
+
+      <!-- Pestaña: actividad reciente -->
+      <div class="tab-panel active" id="tab-recent">
+        <p class="activity-title">Actividad reciente</p>
+        <ul class="activity-list" id="activityList"></ul>
+      </div>
+
+      <!-- Pestaña: calendario -->
+      <div class="tab-panel" id="tab-calendar">
+        <div class="cal-header">
+          <button class="cal-nav-btn" id="calPrevBtn">‹</button>
+          <span class="cal-month-label" id="calMonthLabel"></span>
+          <button class="cal-nav-btn" id="calNextBtn">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <p class="activity-title" id="calDayTitle">Selecciona un día para ver su actividad</p>
+        <ul class="activity-list" id="calDayList"></ul>
+      </div>
+
+      <!-- Pestaña: favoritos -->
+      <div class="tab-panel" id="tab-favorites">
+        <p class="activity-title">Favoritos</p>
+        <ul class="activity-list" id="favoritesList"></ul>
+      </div>
+
+      <p class="loading-msg" id="loadingMsg" style="display:none;">Cargando...</p>
+    </div>
+
+    <!-- ---------- SECCIÓN: CUPONES ---------- -->
+    <div class="section-panel" id="section-coupons">
+      <div class="section-header">
+        <button class="back-btn" data-back>← volver</button>
+        <p class="section-title">Cupones</p>
+        <span class="header-spacer"></span>
+      </div>
+      <ul class="coupon-admin-list" id="couponAdminList">
+        <li class="empty-msg">Cargando cupones…</li>
+      </ul>
+    </div>
+
+    <!-- ---------- SECCIÓN: CÁPSULA DEL TIEMPO ---------- -->
+    <div class="section-panel" id="section-capsule">
+      <div class="section-header">
+        <button class="back-btn" data-back>← volver</button>
+        <p class="section-title">Cápsula del tiempo</p>
+        <span class="header-spacer"></span>
+      </div>
+
+      <div class="capsule-status" id="capsuleStatus">Cargando estado…</div>
+
+      <div class="letter-editor">
+        <p class="editor-title">⏳ Configurar cápsula</p>
+        <label>Fecha y hora en que se abre</label>
+        <input type="datetime-local" id="capsuleUnlockInput">
+        <label>Título</label>
+        <input type="text" id="capsuleTitleInput" placeholder="Sorpresa de aniversario">
+        <label>Texto (separa párrafos dejando una línea en blanco)</label>
+        <textarea id="capsuleTextInput" rows="6"></textarea>
+        <label>Link de la imagen (opcional)</label>
+        <input type="text" id="capsuleImageInput" placeholder="https://...">
+        <button class="letter-reset-btn" id="saveCapsuleBtn" style="margin-top:14px;">💾 Guardar cápsula</button>
+        <p class="save-msg" id="capsuleSaveMsg"></p>
       </div>
     </div>
 
-    <div class="letter-status" id="letterStatus">Cargando estado de la carta...</div>
-
-    <div class="letter-editor">
-      <p class="editor-title">✏️ Editar la carta</p>
-      <label>Dedicatoria</label>
-      <input type="text" id="editDedication" placeholder="Mi futura esposa.">
-      <label>Fecha</label>
-      <input type="text" id="editDate" placeholder="15 Jul 26">
-      <label>Contenido (separa cada párrafo dejando una línea en blanco entre uno y otro)</label>
-      <textarea id="editBody" rows="10"></textarea>
-      <label>Posdata</label>
-      <textarea id="editPs" rows="3"></textarea>
-      <label>Firma</label>
-      <input type="text" id="editSignature" placeholder="Con amor, E.C.">
-      <button class="letter-reset-btn" id="saveLetterBtn" style="margin-top:14px;">💾 Guardar cambios</button>
-      <p class="save-msg" id="saveMsg"></p>
-    </div>
-
-    <button class="letter-reset-btn" id="previewLetterBtn" style="background:linear-gradient(135deg, rgba(177,153,255,0.22), rgba(255,255,255,0.08));border-color:rgba(177,153,255,0.4);">Vista previa </button>
-    <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar/Enviar </button>
-
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="recent">Reciente</button>
-      <button class="tab-btn" data-tab="calendar">Calendario</button>
-      <button class="tab-btn" data-tab="favorites">Favoritos</button>
-    </div>
-
-    <!-- Pestaña: actividad reciente -->
-    <div class="tab-panel active" id="tab-recent">
-      <p class="activity-title">Actividad reciente</p>
-      <ul class="activity-list" id="activityList"></ul>
-    </div>
-
-    <!-- Pestaña: calendario -->
-    <div class="tab-panel" id="tab-calendar">
-      <div class="cal-header">
-        <button class="cal-nav-btn" id="calPrevBtn">‹</button>
-        <span class="cal-month-label" id="calMonthLabel"></span>
-        <button class="cal-nav-btn" id="calNextBtn">›</button>
-      </div>
-      <div class="cal-grid" id="calGrid"></div>
-      <p class="activity-title" id="calDayTitle">Selecciona un día para ver su actividad</p>
-      <ul class="activity-list" id="calDayList"></ul>
-    </div>
-
-    <!-- Pestaña: favoritos -->
-    <div class="tab-panel" id="tab-favorites">
-      <p class="activity-title">Favoritos</p>
-      <ul class="activity-list" id="favoritesList"></ul>
-    </div>
-
-    <p class="loading-msg" id="loadingMsg" style="display:none;">Cargando...</p>
-    <button class="refresh-btn" id="refreshBtn">↻ Actualizar</button>
-    <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
   </div>
 </div>
 
@@ -471,6 +634,28 @@ auth.onAuthStateChanged(function(user){
 
 document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
 
+/* ------------------------------------------------------------
+   NAVEGACIÓN: hub principal <-> secciones
+   ------------------------------------------------------------ */
+function showSection(name){
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+document.querySelectorAll('.hub-card').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const section = btn.dataset.section;
+    showSection(section);
+    if(section === 'coupons') loadCouponsAdmin();
+    if(section === 'capsule') loadCapsuleAdmin();
+  });
+});
+
+document.querySelectorAll('[data-back]').forEach(btn => {
+  btn.addEventListener('click', () => showSection('hub'));
+});
+
 /* ---------- VISTA PREVIA (100% local, no toca Firebase) ---------- */
 document.getElementById('previewLetterBtn').addEventListener('click', function(){
   applyPreviewContent({
@@ -528,7 +713,7 @@ document.getElementById('resetLetterBtn').addEventListener('click', function(){
 document.getElementById('refreshBtn').addEventListener('click', loadStats);
 
 /* ------------------------------------------------------------
-   Pestañas
+   Pestañas (Reciente / Calendario / Favoritos)
    ------------------------------------------------------------ */
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -701,7 +886,7 @@ document.getElementById('calNextBtn').addEventListener('click', () => {
 });
 
 /* ------------------------------------------------------------
-   Favoritos
+   Estado + editor de la carta
    ------------------------------------------------------------ */
 function renderLetterStatus(){
   const box = document.getElementById('letterStatus');
@@ -791,6 +976,9 @@ document.getElementById('saveLetterBtn').addEventListener('click', function(){
   });
 });
 
+/* ------------------------------------------------------------
+   Favoritos
+   ------------------------------------------------------------ */
 function renderFavorites(){
   const favList = document.getElementById('favoritesList');
   const favItems = allEvents.filter(ev => favoriteIds.has(ev.id));
@@ -836,6 +1024,124 @@ function handleStarClick(e){
 document.getElementById('activityList').addEventListener('click', handleStarClick);
 document.getElementById('calDayList').addEventListener('click', handleStarClick);
 document.getElementById('favoritesList').addEventListener('click', handleStarClick);
+
+/* ------------------------------------------------------------
+   Cupones (vista admin: disponibles / canjeados, con reset)
+   ------------------------------------------------------------ */
+let couponsAdminListenerStarted = false;
+
+function loadCouponsAdmin(){
+  if(couponsAdminListenerStarted) return;
+  couponsAdminListenerStarted = true;
+  db.collection('coupons').onSnapshot(snap => {
+    const coupons = [];
+    snap.forEach(doc => coupons.push(Object.assign({ id: doc.id }, doc.data())));
+    coupons.sort((a, b) => (a.order || 0) - (b.order || 0));
+    renderCouponsAdmin(coupons);
+  }, () => {
+    document.getElementById('couponAdminList').innerHTML =
+      '<li class="empty-msg">No se pudo cargar. Revisa las reglas de Firestore para "coupons".</li>';
+  });
+}
+
+function renderCouponsAdmin(coupons){
+  const list = document.getElementById('couponAdminList');
+  if(!coupons.length){
+    list.innerHTML = '<li class="empty-msg">Todavía no hay cupones — se crean solos cuando alguien abra la pestaña de Regalos por primera vez.</li>';
+    return;
+  }
+
+  list.innerHTML = coupons.map(c => {
+    const redeemedDate = c.redeemedAt && c.redeemedAt.toDate
+      ? c.redeemedAt.toDate().toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})
+      : '';
+    const statusHTML = c.redeemed
+      ? `<span class="coupon-status redeemed">✅ Canjeado por ${c.redeemedBy || '—'}${redeemedDate ? ' · ' + redeemedDate : ''}</span>`
+      : `<span class="coupon-status available">🟢 Disponible</span>`;
+    const resetBtn = c.redeemed ? `<button class="coupon-reset-btn" data-id="${c.id}">↺ Restablecer</button>` : '';
+
+    return `<li class="coupon-admin-item">
+        <div class="coupon-admin-main">
+          <span class="coupon-admin-icon">${c.icon || '🎁'}</span>
+          <div>
+            <p class="coupon-admin-title">${c.title || ''}</p>
+            <p class="coupon-admin-desc">${c.desc || ''}</p>
+            ${statusHTML}
+          </div>
+        </div>
+        ${resetBtn}
+      </li>`;
+  }).join('');
+
+  list.querySelectorAll('.coupon-reset-btn').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const id = this.dataset.id;
+      db.collection('coupons').doc(id).set({
+        redeemed: false, redeemedBy: null, redeemedAt: null
+      }, {merge:true}).catch(() => {
+        alert('No se pudo restablecer el cupón, revisa tu conexión.');
+      });
+    });
+  });
+}
+
+/* ------------------------------------------------------------
+   Cápsula del tiempo (configurar fecha, título, texto e imagen)
+   ------------------------------------------------------------ */
+let capsuleAdminLoaded = false;
+
+function loadCapsuleAdmin(){
+  db.collection('capsule').doc('current').get().then(doc => {
+    const statusEl = document.getElementById('capsuleStatus');
+    if(doc.exists){
+      const d = doc.data();
+      const unlock = d.unlockDate ? new Date(d.unlockDate) : null;
+      if(unlock && unlock.getTime() > Date.now()){
+        statusEl.textContent = `🔒 Se abre el ${unlock.toLocaleString('es-MX', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})}`;
+      } else if(unlock){
+        statusEl.textContent = `💌 Ya se abrió (estaba programada para el ${unlock.toLocaleString('es-MX', {day:'numeric', month:'long', year:'numeric'})})`;
+      } else {
+        statusEl.textContent = 'Sin fecha configurada todavía.';
+      }
+      if(!capsuleAdminLoaded){
+        capsuleAdminLoaded = true;
+        if(d.unlockDate){
+          document.getElementById('capsuleUnlockInput').value = d.unlockDate.slice(0, 16);
+        }
+        document.getElementById('capsuleTitleInput').value = d.title || '';
+        document.getElementById('capsuleTextInput').value = d.text || '';
+        document.getElementById('capsuleImageInput').value = d.imageUrl || '';
+      }
+    } else {
+      statusEl.textContent = 'Todavía no has creado ninguna cápsula.';
+      capsuleAdminLoaded = true;
+    }
+  }).catch(() => {
+    document.getElementById('capsuleStatus').textContent = 'No se pudo cargar, revisa tu conexión.';
+  });
+}
+
+document.getElementById('saveCapsuleBtn').addEventListener('click', function(){
+  const msg = document.getElementById('capsuleSaveMsg');
+  const unlockVal = document.getElementById('capsuleUnlockInput').value;
+  if(!unlockVal){
+    msg.textContent = 'Elige una fecha y hora primero.';
+    return;
+  }
+  const data = {
+    unlockDate: unlockVal, // 'YYYY-MM-DDTHH:MM', el mismo formato que lee el index
+    title: document.getElementById('capsuleTitleInput').value,
+    text: document.getElementById('capsuleTextInput').value,
+    imageUrl: document.getElementById('capsuleImageInput').value
+  };
+  db.collection('capsule').doc('current').set(data).then(() => {
+    msg.textContent = '✅ Guardado';
+    capsuleAdminLoaded = false;
+    loadCapsuleAdmin();
+  }).catch(() => {
+    msg.textContent = 'No se pudo guardar, revisa tu conexión.';
+  });
+});
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
