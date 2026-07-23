@@ -3,546 +3,1462 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estadísticas - Para ti</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Dancing+Script:wght@500;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="manifest" href="manifest-stats.json">
-<meta name="theme-color" content="#fdf5ff">
-<link rel="icon" href="stats-icon-192.png">
-<link rel="apple-touch-icon" href="stats-icon-192.png">
-
-<!-- ================================================================
-     CSS — diseño y apariencia (tema claro)
-     ================================================================ -->
+<title>Para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Dancing+Script:wght@500;700&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#050416">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
+  /* ================================================================
+     ░ CSS 
+     ================================================================ */
+
   :root{
-    --violet-deep:#7c5cbf;
-    --pink-glow:#e0447d;
-    --cloud-white:#ffffff;
-    --ink:#3a2e52;
-    --ink-soft:#7a6d99;
-    --ink-faint:#a89cc4;
-    --accent-violet:#7c5cd6;
-    --glass:rgba(255,255,255,0.62);
-    --glass-strong:rgba(255,255,255,0.85);
-    --glass-border:rgba(139,111,217,0.18);
-    --card-shadow:0 8px 26px rgba(139,111,217,0.14);
-    --bg-grad:linear-gradient(160deg, #fdf5ff 0%, #f1e6ff 45%, #ffe7f1 100%);
+    --violet-deep:#2b1a49;
+    --violet-mid:#6a4390;
+    --coral:#ff9d7a;
+    --pink-glow:#ff7ab0;
+    --cloud-white:#f8f3ff;
+    --lavender:#d9c3ff;
+    --leaf:#4f6b45;
+    --space-black:#050416;
+    --space-navy:#0b0e2e;
+    --star-white:#fdfcf7;
+    --accent-violet:#b199ff;
+    --coupon-red:#e6355f;
+
+    /* ---- tokens de tema (claro/oscuro) — solo afectan universo/dashboard/diario/álbum ---- */
+    --page-bg:var(--space-black);
+    --txt-1:var(--cloud-white);
+    --txt-2:rgba(255,255,255,0.65);
+    --txt-3:rgba(255,255,255,0.45);
+    --glass-1:rgba(255,255,255,0.03);
+    --glass-2:rgba(255,255,255,0.14);
+    --glass-3:rgba(255,255,255,0.22);
+    --glass-4:rgba(255,255,255,0.08);
   }
+
+  body.theme-light{
+    --page-bg:linear-gradient(160deg,#eaf3ff 0%,#fdf6ff 45%,#fff3e0 100%);
+    --cloud-white:#332a4d;
+    --txt-1:#332a4d;
+    --txt-2:rgba(51,42,77,0.68);
+    --txt-3:rgba(51,42,77,0.5);
+    --star-white:#ffb84d;
+    --glass-1:rgba(124,92,191,0.05);
+    --glass-2:rgba(255,255,255,0.55);
+    --glass-3:rgba(124,92,191,0.25);
+    --glass-4:rgba(255,255,255,0.6);
+  }
+
+  /* ---- tokens de accent (color del año) ---- */
+  body[data-accent="verde"]{ --pink-glow:#5fd48a; --accent-violet:#2f9e63; }
+  body[data-accent="azul"]{ --pink-glow:#6fb8ff; --accent-violet:#3f7fd6; }
+  body[data-accent="rojo"]{ --pink-glow:#ff6f7a; --accent-violet:#e6355f; }
+  body[data-accent="dorado"]{ --pink-glow:#ffcf7a; --accent-violet:#e0a13a; }
+  body[data-accent="rosa"]{ --pink-glow:#ff8ad1; --accent-violet:#d874e0; }
+
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;min-height:100%;background:var(--bg-grad);background-attachment:fixed;font-family:'Quicksand',sans-serif;}
-  @supports (height: 100dvh){ html,body{min-height:100dvh;} }
+  html,body{margin:0;padding:0;height:100%;background:var(--page-bg);overflow:hidden;font-family:'Quicksand',sans-serif;}
+  @supports (height: 100dvh){
+    html,body{height:100dvh;}
+  }
 
-  .screen{
-    min-height:100vh;
+  #app{position:fixed;inset:0;width:100%;height:100%;}
+
+  .scene{
+    position:fixed;inset:0;
     display:flex;align-items:center;justify-content:center;
-    padding:24px;
+    opacity:0;pointer-events:none;
+    transition:opacity 1.4s ease;
+    overflow:hidden;
   }
-  @supports (height: 100dvh){ .screen{min-height:100dvh;} }
+  .scene.active{opacity:1;pointer-events:auto;}
 
-  #loginScreen{background:radial-gradient(ellipse at top, #ffffff 0%, #f1e6ff 55%, #ffe0ee 100%);}
+  /* ---------- ESCENA 1: LOGIN (video de fondo según hora del día) ---------- */
+  #scene-login{background:var(--space-black);overflow:hidden;}
+  .login-bg-video{
+    position:absolute;inset:0;z-index:0;
+    width:100%;height:100%;object-fit:cover;
+  }
+  .login-blur-strip{
+    position:absolute;top:0;left:0;bottom:0;z-index:2;
+    width:30%;min-width:130px;max-width:300px;
+    box-sizing:border-box;
+    background:rgba(5,4,22,0.32);
+    backdrop-filter:blur(24px) saturate(150%);
+    -webkit-backdrop-filter:blur(24px) saturate(150%);
+    box-shadow:1px 0 0 rgba(255,255,255,0.08);
+    padding:15vh 18px 0 20px;
+  }
+  .login-form{
+    position:absolute;z-index:2;
+    top:36%;right:6%;
+    width:min(250px,54vw);
+    text-align:left;
+  }
+  .login-form.shake{animation:shake .5s;}
+  .install-btn{
+    position:fixed;top:5%;right:5%;z-index:20;
+    background:linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05));
+    border:1px solid rgba(255,255,255,0.3);
+    color:#fff;padding:8px 16px;border-radius:20px;
+    font-family:'Quicksand',sans-serif;font-size:.75rem;cursor:pointer;
+    display:none;
+    backdrop-filter:blur(10px) saturate(180%);
+    -webkit-backdrop-filter:blur(10px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 14px rgba(0,0,0,0.3);
+  }
+  .install-btn.show{display:block;} 
 
-  .card{
-    width:min(340px,90vw);
-    background:var(--glass-strong);
-    border:1px solid var(--glass-border);
-    backdrop-filter:blur(10px);
-    border-radius:20px;
-    padding:36px 30px;
-    text-align:center;
-    box-shadow:var(--card-shadow);
-  }
-  .card h1{
-    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
-    color:var(--ink);font-size:1.5rem;margin:0 0 22px;
-  }
-  .card input{
-    width:100%;padding:12px 14px;margin-bottom:12px;
-    border-radius:10px;border:1px solid var(--glass-border);
-    background:rgba(255,255,255,0.7);color:var(--ink);font-size:16px;
-    font-family:'Quicksand',sans-serif;outline:none;
-  }
-  .card input:focus{border-color:var(--accent-violet);}
-  .card button{
-    width:100%;padding:12px;border:none;border-radius:10px;
-    background:linear-gradient(135deg,var(--pink-glow),var(--accent-violet));
-    color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;
-    font-size:.95rem;cursor:pointer;margin-top:6px;
-  }
-  .error-msg{color:#c8285c;font-size:.78rem;margin-top:12px;min-height:1em;}
-
-  #dashScreen{display:none;background:var(--bg-grad);align-items:flex-start;}
-  .dash-wrap{width:min(480px,92vw);margin:0 auto;padding:30px 0 60px;}
-  .dash-title{
-    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
-    color:var(--ink);font-size:1.4rem;text-align:center;margin:0 0 26px;
-  }
-
-  /* ---------- HUB PRINCIPAL ---------- */
-  .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px;}
-  .hub-card{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-    padding:32px 14px;border-radius:20px;border:1px solid var(--glass-border);
-    background:var(--glass);box-shadow:var(--card-shadow);
-    cursor:pointer;transition:transform .2s ease, box-shadow .2s ease;
-    font-family:'Quicksand',sans-serif;
-  }
-  .hub-card:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(139,111,217,0.2);}
-  .hub-icon{font-size:2.1rem;}
-  .hub-label{color:var(--ink);font-weight:600;font-size:.88rem;}
-
-  /* ---------- SECCIONES ---------- */
-  .section-panel{display:none;}
-  .section-panel.active{display:block;}
-  .section-header{
-    display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;
-  }
-  .section-header.sticky{
-    position:sticky;top:0;z-index:5;
-    background:rgba(253,247,255,0.88);
-    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    padding:12px 0 14px;margin:-4px 0 12px;
-    border-bottom:1px solid var(--glass-border);
-  }
-  .section-title{
-    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
-    color:var(--ink);font-size:1.2rem;margin:0;
-  }
-  .back-btn{
-    background:none;border:none;color:var(--accent-violet);
-    font-family:'Quicksand',sans-serif;font-weight:600;font-size:.85rem;
-    cursor:pointer;padding:4px 0;
-  }
-  .refresh-btn-icon{
-    width:36px;height:36px;border-radius:50%;flex-shrink:0;
-    background:var(--glass);border:1px solid var(--glass-border);
-    color:var(--accent-violet);font-size:1.1rem;cursor:pointer;
+  /* ---------- botón hamburguesa + panel lateral líquido (tema, color del año, mute) ---------- */
+  .settings-hamburger-row{display:flex;justify-content:flex-start;margin:0 0 14px;}
+  .hamburger-btn{
+    width:40px;height:40px;border-radius:50%;padding:0;
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid var(--glass-3);
+    color:var(--txt-1);font-size:1.15rem;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(10px) saturate(180%);
+    -webkit-backdrop-filter:blur(10px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 14px rgba(0,0,0,0.25);
+    transition:transform .2s ease;
   }
-  .header-spacer{width:36px;}
+  .hamburger-btn:hover{transform:scale(1.06);}
 
-  .stat-cards{display:flex;gap:14px;margin-bottom:26px;}
-  .stat-card{
-    flex:1;background:var(--glass);border:1px solid var(--glass-border);
-    border-radius:16px;padding:18px 10px;text-align:center;box-shadow:var(--card-shadow);
+  .liquid-panel-backdrop{
+    position:fixed;inset:0;z-index:49;background:rgba(0,0,0,0.22);
+    opacity:0;pointer-events:none;transition:opacity .3s ease;
   }
-  .stat-num{color:var(--pink-glow);font-size:2rem;font-weight:700;font-family:'Quicksand',sans-serif;}
-  .stat-label{color:var(--ink-soft);font-size:.75rem;margin-top:4px;}
+  .liquid-panel-backdrop.show{opacity:1;pointer-events:auto;}
 
-  .activity-title{color:var(--ink);font-size:.9rem;margin:0 0 12px;font-weight:600;}
-  .activity-list{list-style:none;padding:0;margin:0;}
-  .activity-item{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:10px 14px;border-radius:10px;
-    background:var(--glass);margin-bottom:8px;border:1px solid var(--glass-border);
-    color:var(--ink);font-size:.82rem;
+  .liquid-side-panel{
+    position:fixed;top:0;left:0;bottom:0;z-index:50;
+    width:min(100px,27vw);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:26px;padding:20px 6px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+    border-right:1px solid rgba(255,255,255,0.18);
+    backdrop-filter:blur(28px) saturate(200%);
+    -webkit-backdrop-filter:blur(28px) saturate(200%);
+    box-shadow:8px 0 40px rgba(0,0,0,0.28), inset -1px 0 0 rgba(255,255,255,0.12);
+    transform:translateX(-100%);
+    transition:transform .35s cubic-bezier(.2,.8,.3,1);
   }
-  .activity-item-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .activity-item .tag{
-    font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600;
-  }
-  .tag.visit{background:rgba(124,92,214,0.16);color:var(--accent-violet);}
-  .tag.login{background:rgba(224,68,125,0.14);color:var(--pink-glow);}
-  .tag.letter_read{background:rgba(201,138,31,0.16);color:#c98a1f;}
-  .user-badge{
-    font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600;
-    background:rgba(139,111,217,0.1);color:var(--ink-soft);
-  }
-  .user-badge.Mor{background:rgba(224,68,125,0.14);color:var(--pink-glow);}
-  .user-badge.Admin{background:rgba(124,92,214,0.16);color:var(--accent-violet);}
-
-  .star-btn{
-    background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;
-    padding:2px 4px;color:var(--ink-faint);flex-shrink:0;
-  }
-  .star-btn.starred{color:#c98a1f;}
-
-  .empty-msg{
-    color:var(--ink-faint);font-size:.8rem;text-align:center;
-    padding:18px 10px;background:rgba(139,111,217,0.05);border-radius:10px;list-style:none;
+  .liquid-side-panel.show{transform:translateX(0);}
+  .accent-swatches.vertical{display:none;flex-direction:column;gap:10px;}
+  .accent-swatches.vertical.show{display:flex;}
+  .mute-toggle-btn{
+    background:none;border:none;color:var(--txt-1);font-size:1.25rem;cursor:pointer;
+    padding:4px;
   }
 
-  .letter-reset-btn{
-    display:block;width:100%;margin:0 auto 14px;padding:14px;border-radius:14px;
-    border:1px solid rgba(224,68,125,0.3);
-    background:linear-gradient(135deg, rgba(255,206,122,0.4), rgba(224,68,125,0.14));
-    color:var(--ink);font-family:'Quicksand',sans-serif;font-weight:600;font-size:.9rem;
+  .music-btn{
+    position:fixed;bottom:5%;left:5%;z-index:20;
+    background:linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05));
+    border:1px solid rgba(255,255,255,0.3);
+    color:#fff;width:40px;height:40px;border-radius:50%;
+    font-size:1rem;cursor:pointer;
+    backdrop-filter:blur(10px) saturate(180%);
+    -webkit-backdrop-filter:blur(10px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 14px rgba(0,0,0,0.3);
+  }
+
+  .theme-switch-block{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .theme-switch-icon{font-size:1.3rem;line-height:1;}
+  .theme-switch-track{
+    position:relative;width:42px;height:23px;border-radius:20px;padding:0;
+    background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.28);
     cursor:pointer;
   }
+  .theme-switch-thumb{
+    position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;
+    background:linear-gradient(135deg,#fff,#ddd);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  body.theme-light .theme-switch-thumb{transform:translateX(19px);}
 
-  /* Tabs */
-  .tab-bar{display:flex;gap:8px;margin-bottom:20px;}
-  .tab-btn{
-    flex:1;padding:10px 4px;border-radius:12px;border:1px solid var(--glass-border);
-    background:rgba(255,255,255,0.4);color:var(--ink-soft);
-    font-family:'Quicksand',sans-serif;font-weight:600;font-size:.78rem;cursor:pointer;
+  .accent-picker-block{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .accent-trigger-btn{
+    width:34px;height:34px;border-radius:50%;padding:0;
+    border:2px solid rgba(255,255,255,0.4);cursor:pointer;
+    transition:transform .2s ease;
   }
-  .tab-btn.active{
-    background:linear-gradient(135deg, rgba(224,68,125,0.22), rgba(124,92,214,0.22));
-    border-color:rgba(139,111,217,0.35);color:var(--ink);
+  .accent-trigger-btn:hover{transform:scale(1.08);}
+  .accent-swatches{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;}
+  .accent-swatch{
+    width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);
+    cursor:pointer;transition:transform .2s ease, border-color .2s ease;padding:0;
   }
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;}
+  .accent-swatch:hover{transform:scale(1.1);}
+  .accent-swatch.selected{border-color:#fff;transform:scale(1.12);}
 
-  /* Calendario */
-  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .cal-nav-btn{
-    background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);
-    border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer;
+  /* ---------- partículas suaves del Dashboard, coloreadas según el color del año ---------- */
+  .accent-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;}
+  .accent-particle{
+    position:absolute;border-radius:50%;
+    background:radial-gradient(circle, var(--pink-glow), transparent 70%);
+    opacity:0;filter:blur(1px);
+    animation:particle-float linear infinite;
   }
-  .cal-month-label{
-    color:var(--ink);font-family:'Cormorant Garamond',serif;font-style:italic;
-    font-size:1.15rem;text-transform:capitalize;
-  }
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;}
-  .cal-dow{text-align:center;color:var(--ink-faint);font-size:.66rem;padding-bottom:4px;}
-  .cal-day{
-    aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-    border-radius:10px;background:rgba(255,255,255,0.45);color:var(--ink-soft);
-    font-size:.8rem;cursor:pointer;position:relative;border:1px solid transparent;
-  }
-  .cal-day.empty{background:none;cursor:default;}
-  .cal-day.has-events::after{
-    content:'';position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;
-    background:var(--pink-glow);
-  }
-  .cal-day.today{color:var(--pink-glow);font-weight:700;}
-  .cal-day.selected{border-color:var(--accent-violet);background:rgba(124,92,214,0.16);color:var(--ink);}
-
-  .logout-btn{
-    display:block;margin:26px auto 0;padding:10px 20px;border-radius:20px;
-    border:1px solid var(--glass-border);background:none;color:var(--ink-soft);
-    font-family:'Quicksand',sans-serif;font-size:.8rem;cursor:pointer;
-  }
-  .loading-msg{color:var(--ink-faint);text-align:center;font-size:.85rem;margin-top:20px;}
-
-  /* ---------- CARTA: estado + editor ---------- */
-  .letter-status{
-    background:var(--glass);border:1px solid var(--glass-border);
-    border-radius:14px;padding:14px 16px;margin-bottom:14px;
-    color:var(--ink);font-size:.85rem;text-align:center;box-shadow:var(--card-shadow);
-  }
-  .letter-editor{
-    background:var(--glass);border:1px solid var(--glass-border);
-    border-radius:14px;padding:16px;margin-bottom:14px;text-align:left;box-shadow:var(--card-shadow);
-  }
-  .letter-editor .editor-title{
-    color:var(--ink);font-size:.9rem;font-weight:600;margin:0 0 12px;
-  }
-  .letter-editor label{
-    display:block;color:var(--ink-soft);font-size:.72rem;margin:10px 0 4px;
-  }
-  .letter-editor input, .letter-editor textarea{
-    width:100%;padding:10px 12px;border-radius:10px;
-    border:1px solid var(--glass-border);background:rgba(255,255,255,0.65);
-    color:var(--ink);font-size:14px;font-family:'Quicksand',sans-serif;
-    outline:none;resize:vertical;
-  }
-  .letter-editor input:focus, .letter-editor textarea:focus{border-color:var(--accent-violet);}
-  .save-msg{color:var(--ink-faint);font-size:.75rem;margin:10px 0 0;text-align:center;}
-
-  /* ---------- CUPONES (vista admin) ---------- */
-  .coupon-admin-list{list-style:none;padding:0;margin:0;}
-  .coupon-admin-item{
-    display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
-    background:var(--glass);border:1px solid var(--glass-border);
-    border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--card-shadow);
-  }
-  .coupon-admin-main{display:flex;gap:12px;align-items:flex-start;}
-  .coupon-admin-icon{font-size:1.5rem;line-height:1.3;}
-  .coupon-admin-title{color:var(--ink);font-weight:600;font-size:.9rem;margin:0 0 2px;}
-  .coupon-admin-desc{color:var(--ink-soft);font-size:.78rem;margin:0 0 8px;}
-  .coupon-status{font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:20px;display:inline-block;}
-  .coupon-status.available{background:rgba(47,158,92,0.14);color:#2f9e5c;}
-  .coupon-status.redeemed{background:rgba(224,68,125,0.14);color:var(--pink-glow);}
-  .coupon-reset-btn{
-    flex-shrink:0;background:none;border:1px solid var(--glass-border);
-    border-radius:14px;padding:6px 10px;color:var(--accent-violet);
-    font-family:'Quicksand',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;
+  @keyframes particle-float{
+    0%{transform:translateY(10vh) translateX(0) scale(1);opacity:0;}
+    10%{opacity:.32;}
+    88%{opacity:.32;}
+    100%{transform:translateY(-110vh) translateX(var(--drift,20px)) scale(1.2);opacity:0;}
   }
 
-  /* ---------- CÁPSULA DEL TIEMPO (configurar) ---------- */
-  .capsule-status{
-    background:var(--glass);border:1px solid var(--glass-border);
-    border-radius:14px;padding:14px 16px;margin-bottom:14px;
-    color:var(--ink);font-size:.85rem;text-align:center;box-shadow:var(--card-shadow);
+  /* ---------- AVISO DE ACTUALIZACIÓN ---------- */
+  .update-overlay{
+    position:fixed;inset:0;z-index:9999;
+    background:radial-gradient(ellipse at center, #14103a 0%, var(--space-black) 80%);
+    display:flex;align-items:center;justify-content:center;
+    opacity:1;transition:opacity .7s ease;
+  }
+  .update-overlay.hide{opacity:0;pointer-events:none;}
+  .update-box{text-align:center;color:var(--cloud-white);}
+  .update-box p{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:1.05rem;margin-top:20px;letter-spacing:.3px;
+    padding:0 30px;
+  }
+  .update-spinner{
+    width:42px;height:42px;margin:0 auto;border-radius:50%;
+    border:3px solid rgba(255,255,255,0.15);
+    border-top-color:var(--pink-glow);
+    animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px);}
+    40%{transform:translateX(8px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+  .login-title{
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;font-weight:500;
+    color:var(--cloud-white);
+    font-size:1.3rem;margin:0 0 8px;
+    letter-spacing:.5px;
+    text-shadow:0 2px 12px rgba(0,0,0,0.55);
+  }
+  .login-greeting{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
+    color:var(--cloud-white);font-size:1.05rem;margin:0 0 6px;
+    text-shadow:0 2px 12px rgba(0,0,0,0.55);
+  }
+  .login-blur-strip .login-quote{
+    color:var(--cloud-white);
+    font-size:clamp(1.1rem,4vw,1.5rem);line-height:1.4;
+    margin:0;word-wrap:break-word;
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+    text-shadow:0 2px 14px rgba(0,0,0,0.6);
+  }
+  .login-sub{
+    color:rgba(255,255,255,0.7);font-size:.8rem;margin:0 0 22px;
+    text-shadow:0 2px 10px rgba(0,0,0,0.5);
+  }
+  .login-form input{
+    display:block;width:100%;
+    background:transparent;border:none;
+    border-bottom:1px solid rgba(255,255,255,0.4);
+    padding:10px 2px;margin-bottom:16px;
+    color:#fff;font-size:16px;
+    font-family:'Quicksand',sans-serif;outline:none;
+    transition:border-color .2s ease;
+  }
+  .login-form input::placeholder{color:rgba(255,255,255,0.6);}
+  .login-form input:focus{border-color:var(--accent-violet);}
+  /* ---------- botón "liquid glass" ---------- */
+  /* ---------- botón "liquid glass" ---------- */
+  .login-btn{
+    position:relative;overflow:hidden;
+    padding:12px 30px;
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:999px;
+    /* Efecto Liquid Glass usando tu plantilla */
+    background:transparent;
+    backdrop-filter: blur(6px) url(#distorsion);
+    -webkit-backdrop-filter: blur(6px) url(#distorsion);
+    color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;
+    font-size:.92rem;letter-spacing:.4px;cursor:pointer;margin-top:4px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transition:all 0.6s ease;
+  }
+  .login-btn:hover{
+    background: rgba(255,255,255,0.05);
+    box-shadow: 0 8px 32px rgba(255,122,176,0.3);
+    transform:translateY(-2px);
+  }
+  .login-btn:active{transform:translateY(0) scale(0.98);}
+
+  /* ---------- arte de la flor (reutilizado en el Tamagotchi del Dashboard) ---------- */
+/* ---------- ARTE DE LA FLOR PROGRESIVA (21 DÍAS) ---------- */
+  .flower-scale{
+    transform: scale(var(--fscale, 0.4));
+    transform-origin: bottom center;
+    transition: transform 0.6s ease;
+    margin-bottom: 5px; 
+  }
+  .flower-sway{
+    animation: sway 3s ease-in-out infinite;
+    transform-origin: bottom center;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  }
+  @keyframes sway{
+    0%,100%{transform:rotate(-3deg);}
+    50%{transform:rotate(3deg);}
+  }
+  
+  /* Tallo */
+  .flower__stem{
+    width: 4px; 
+    height: var(--stem-h, 5px); 
+    background: var(--leaf);
+    border-radius: 2px;
+    position: relative;
+    transition: height 0.6s ease;
+  }
+  
+  /* Hojitas (Fase Semilla/Tallo/Planta) */
+  .plant-leaves {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%) scale(var(--leaf-scale, 0));
+    width: 2px;
+    height: 10px;
+    transition: transform 0.6s ease;
+  }
+  .plant-leaves::before, .plant-leaves::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 14px; height: 14px;
+    background: var(--leaf);
+    box-shadow: inset 2px 2px 4px rgba(255,255,255,0.2);
+  }
+  .plant-leaves::before {
+    right: 100%;
+    border-radius: 0 100% 0 100%;
+    transform-origin: bottom right;
+    transform: rotate(-25deg);
+  }
+  .plant-leaves::after {
+    left: 100%;
+    border-radius: 100% 0 100% 0;
+    transform-origin: bottom left;
+    transform: rotate(25deg);
   }
 
-  /* ---------- VISTA PREVIA DE LA CARTA (simula lo que ella ve, se queda oscura/inmersiva a propósito) ---------- */
-  .preview-overlay{
-    display:none;position:fixed;inset:0;z-index:9998;
-    background:radial-gradient(ellipse at center, #14103a 0%, #050416 80%);
-    align-items:center;justify-content:center;padding:24px;
+  /* Capullo a Lavanda Real */
+  .flower__cluster{
+    width: 38px; height: 38px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5) 0%, var(--bud-color, var(--leaf)) 55%, transparent 70%),
+      radial-gradient(circle at 70% 35%, rgba(255,255,255,0.5) 0%, var(--bud-color, var(--leaf)) 50%, transparent 65%),
+      radial-gradient(circle at 45% 68%, rgba(255,255,255,0.5) 0%, var(--bud-color, var(--leaf)) 50%, transparent 65%),
+      radial-gradient(circle at 68% 66%, rgba(255,255,255,0.5) 0%, var(--bud-color, var(--leaf)) 50%, transparent 65%);
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
+    margin-bottom: -2px;
+    transform: scale(var(--flower-size, 0));
+    opacity: var(--flower-opacity, 0);
+    transition: all 0.6s ease;
   }
-  .preview-overlay.show{display:flex;}
-  .preview-close{
-    position:absolute;top:5%;right:5%;z-index:10;
-    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);
-    color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;
+
+  /* ---------- ESCENAS 3 y 4: UNIVERSO ---------- */
+  #scene-universe, #scene-final{background:var(--page-bg);}
+  .starfield{position:absolute;inset:0;overflow:hidden;}
+  .warp-layer{
+    position:absolute;top:50%;left:50%;width:1px;height:1px;
+    background:transparent;
+    animation-name:warp;animation-iteration-count:infinite;animation-timing-function:linear;
   }
-  .preview-warning{
-    position:relative;z-index:2;text-align:center;width:min(340px,88vw);
+  @keyframes warp{
+    0%{transform:translate(-50%,-50%) scale(0.4);opacity:0;}
+    15%{opacity:1;}
+    100%{transform:translate(-50%,-50%) scale(2.6);opacity:0;}
+  }
+  .hover-star{
+    position:absolute;width:5px;height:5px;border-radius:50%;
+    background:var(--star-white);
+    box-shadow:0 0 8px 2px rgba(255,255,255,0.7);
+    cursor:pointer;
+    animation:twinkle ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:0.35;transform:scale(1);}
+    50%{opacity:1;transform:scale(1.4);}
+  }
+  .hover-star:hover{box-shadow:0 0 16px 6px var(--accent-violet);}
+  .love-pop{
+    position:absolute;pointer-events:none;
+    font-family:'Dancing Script',cursive;
+    color:var(--pink-glow);
+    font-size:1.1rem;
+    white-space:nowrap;
+    opacity:0;
+    transform:translate(-50%,0);
+    transition:opacity .35s ease, transform .9s ease;
+    text-shadow:0 0 10px rgba(255,122,176,0.8);
+  }
+  .love-pop.show{opacity:1;transform:translate(-50%,-28px);}
+
+  .universe-hint{
+    position:absolute;bottom:9%;left:50%;transform:translateX(-50%);
+    color:var(--txt-2);font-size:.85rem;
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    text-align:center;z-index:3;
+  }
+  .continue-btn{
+    position:absolute;bottom:5%;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid var(--glass-3);
+    color:var(--txt-1);padding:10px 22px;border-radius:30px;
+    font-family:'Quicksand',sans-serif;font-size:.85rem;letter-spacing:.5px;
+    cursor:pointer;opacity:0;z-index:4;
+    backdrop-filter:blur(10px) saturate(180%);
+    -webkit-backdrop-filter:blur(10px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 14px rgba(0,0,0,0.25);
+    transition:opacity 1s ease, background .2s ease, transform .2s ease;
+  }
+  .continue-btn.show{opacity:1;}
+  .continue-btn:hover{background:linear-gradient(135deg, var(--glass-3), var(--glass-4));transform:translateX(-50%) translateY(-2px);}
+
+  #scene-final .final-text{
+    position:relative;z-index:3;
+    font-family:'Dancing Script',cursive;font-weight:700;
+    font-size:clamp(3rem,13vw,8rem);
+    color:var(--cloud-white);
+    text-shadow:0 0 24px var(--pink-glow), 0 0 60px var(--accent-violet);
+    animation:glow 3.2s ease-in-out infinite;
+    text-align:center;
+  }
+  @keyframes glow{
+    0%,100%{text-shadow:0 0 24px var(--pink-glow), 0 0 60px var(--accent-violet);}
+    50%{text-shadow:0 0 40px var(--pink-glow), 0 0 100px var(--accent-violet);}
+  }
+  .restart-link{
+    position:absolute;bottom:4%;left:50%;transform:translateX(-50%);
+    color:var(--txt-3);font-size:.72rem;
+    font-family:'Quicksand',sans-serif;text-decoration:none;
+    z-index:4;cursor:pointer;
+  }
+  .restart-link:hover{color:var(--txt-2);}
+
+  /* ---------- CARTA SORPRESA ---------- */
+  .letter-overlay{
+    position:fixed;inset:0;z-index:9998;
+    background:radial-gradient(ellipse at center, #14103a 0%, var(--space-black) 80%);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;
+    transition:opacity .8s ease;
+    padding:24px;
+  }
+  .letter-overlay.show{opacity:1;pointer-events:auto;}
+
+  .letter-warning{
+    position:relative;z-index:2;text-align:center;
+    width:min(340px,88vw);
     background:linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
-    border:1px solid rgba(255,255,255,0.25);backdrop-filter:blur(18px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.25);
+    backdrop-filter:blur(18px) saturate(180%);
     -webkit-backdrop-filter:blur(18px) saturate(180%);
     border-radius:20px;padding:36px 30px;
     box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.35);
   }
-  .preview-warning .icon{font-size:2rem;margin-bottom:10px;}
-  .preview-warning .title{
+  .letter-warning-icon{font-size:2rem;margin-bottom:10px;}
+  .letter-warning p.title{
     font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
-    color:#f8f3ff;font-size:1.3rem;margin:0 0 14px;
+    color:var(--cloud-white);font-size:1.3rem;margin:0 0 14px;
   }
-  .preview-warning .sub{color:rgba(255,255,255,0.65);font-size:.82rem;line-height:1.5;margin:0 0 24px;}
-  .preview-warning .letter-reset-btn{
-    background:linear-gradient(135deg, rgba(255,206,122,0.3), rgba(255,122,176,0.18));
-    color:#fff;border:1px solid rgba(255,206,122,0.4);
+  .letter-warning-text{
+    color:rgba(255,255,255,0.65);font-size:.82rem;line-height:1.5;margin:0 0 24px;
   }
 
-  .preview-scroll{
-    display:none;position:relative;z-index:2;width:min(420px,90vw);
-    max-height:88vh;flex-direction:column;align-items:center;
+  .scroll-wrap{
+    display:none;
+    position:relative;z-index:2;
+    width:min(420px,90vw);
+    max-height:88vh;
+    flex-direction:column;
+    align-items:center;
   }
-  .preview-scroll.show{display:flex;}
-  .preview-rod{
+  .scroll-wrap.show{display:flex;}
+  .scroll-rod{
     width:88%;height:16px;border-radius:10px;flex-shrink:0;
-    background:linear-gradient(180deg, #8a5a34, #5c3a20);box-shadow:0 3px 8px rgba(0,0,0,0.4);
+    background:linear-gradient(180deg, #8a5a34, #5c3a20);
+    box-shadow:0 3px 8px rgba(0,0,0,0.4);
   }
-  .preview-paper{
-    width:100%;background:linear-gradient(135deg, #f3e6c8, #e8d3a3);color:#4a3520;
-    padding:30px 26px;overflow-y:auto;max-height:74vh;
+  .scroll-paper{
+    width:100%;
+    background:linear-gradient(135deg, #f3e6c8, #e8d3a3);
+    color:#4a3520;
+    padding:30px 26px;
+    overflow-y:auto;
+    max-height:74vh;
     box-shadow:inset 0 0 40px rgba(120,85,40,0.3), 0 10px 30px rgba(0,0,0,0.4);
     clip-path:inset(50% 0 50% 0);
   }
-  .preview-paper.unrolling{animation:preview-unroll 1.2s cubic-bezier(.2,.8,.3,1) forwards;}
-  @keyframes preview-unroll{
+  .scroll-paper.unrolling{
+    animation:unroll 1.2s cubic-bezier(.2,.8,.3,1) forwards;
+  }
+  @keyframes unroll{
     0%{clip-path:inset(50% 0 50% 0);}
     100%{clip-path:inset(0% 0 0% 0);}
   }
-  .preview-meta{
+  .letter-meta{
     font-family:'Quicksand',sans-serif;font-weight:600;font-size:.8rem;
     text-align:center;margin:0 0 20px;letter-spacing:.3px;color:#6b4a26;
   }
-  .preview-spoiler-hint{
+  .spoiler-hint{
     text-align:center;font-family:'Quicksand',sans-serif;font-size:.72rem;
     color:#8a6a3d;margin:0 0 8px;
   }
-  .preview-body p{
+  .letter-body p{
     font-family:'Cormorant Garamond',serif;font-style:italic;
     font-size:1.05rem;line-height:1.7;margin:0 0 14px;
   }
-  .preview-ps{
+  .letter-ps{
     font-family:'Cormorant Garamond',serif;font-style:italic;
     font-size:.95rem;line-height:1.6;margin:22px 0 4px;color:#6b4a26;
   }
-  .preview-signature{
+  .letter-signature{
     font-family:'Dancing Script',cursive;font-weight:700;
     font-size:1.6rem;text-align:right;margin:8px 0 22px;color:#5c3a20;
   }
-  .preview-spoiler{
-    position:relative;cursor:pointer;user-select:none;filter:blur(6px);
-    transition:filter .4s ease;padding:6px;border-radius:8px;margin-bottom:6px;
+  #leidoBtn{display:block;margin:6px auto 4px;}
+
+  .spoiler-block{
+    position:relative;cursor:pointer;user-select:none;
+    filter:blur(6px);
+    transition:filter .4s ease;
+    padding:6px;border-radius:8px;margin-bottom:6px;
   }
-  .preview-spoiler.revealed{filter:blur(0);}
-  .preview-spoiler::before, .preview-spoiler::after{
+  .spoiler-block.revealed{filter:blur(0);}
+  .spoiler-block::before, .spoiler-block::after{
     content:"✨";position:absolute;font-size:.85rem;
-    animation:preview-sparkle 1.5s ease-in-out infinite;pointer-events:none;
+    animation:sparkle-pop 1.5s ease-in-out infinite;pointer-events:none;
   }
-  .preview-spoiler::before{top:-2px;left:-2px;}
-  .preview-spoiler::after{bottom:-2px;right:-2px;animation-delay:.5s;}
-  .preview-spoiler.revealed::before, .preview-spoiler.revealed::after{display:none;}
-  @keyframes preview-sparkle{
+  .spoiler-block::before{top:-2px;left:-2px;}
+  .spoiler-block::after{bottom:-2px;right:-2px;animation-delay:.5s;}
+  .spoiler-block.revealed::before, .spoiler-block.revealed::after{display:none;}
+  @keyframes sparkle-pop{
     0%,100%{opacity:.3;transform:scale(0.8) rotate(0deg);}
     50%{opacity:1;transform:scale(1.15) rotate(15deg);}
   }
+
+  /* ---------- MENÚ / DIARIO / ÁLBUM ---------- */
+  .starfield-static{position:absolute;inset:0;overflow:hidden;}
+  /* ---------- ESCENA: DASHBOARD ---------- */
+  #scene-dashboard{background:var(--page-bg);}
+  .dash-wrap{
+    position:relative;z-index:2;
+    width:min(480px,92vw);height:88%;
+    display:flex;flex-direction:column;
+  }
+  .dash-tab-panel{display:none;flex:1;overflow-y:auto;padding:2px 2px 10px;}
+  .dash-tab-panel.active{display:block;}
+
+  .dash-header{display:flex;gap:14px;margin:4px 0 24px;}
+  .dash-widget{
+    flex:1;aspect-ratio:1/0.9;
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid var(--glass-3);
+    backdrop-filter:blur(16px) saturate(180%);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    border-radius:18px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--txt-1);text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+  .dash-widget-icon{font-size:1.6rem;margin-bottom:4px;}
+  .dash-widget.clickable{cursor:pointer;transition:transform .2s ease;}
+  .dash-widget.clickable:hover{transform:translateY(-2px);}
+  .dash-widget-value{font-size:1.25rem;font-weight:700;}
+  .dash-widget-label{font-size:.66rem;color:var(--txt-2);margin-top:2px;}
+
+  .dash-section-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+    color:var(--txt-1);font-size:1.15rem;margin:0 0 12px;text-align:center;
+  }
+  .dash-placeholder-card{
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:18px;padding:26px 22px;text-align:center;
+    color:var(--txt-2);font-size:.85rem;line-height:1.5;
+    backdrop-filter:blur(12px) saturate(160%);
+    -webkit-backdrop-filter:blur(12px) saturate(160%);
+  }
+  .dash-placeholder-flower{margin:0 auto 12px;width:38px;} /* ya no se usa aquí, pero no estorba si algo la referencia luego */
+
+  .quick-actions-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;
+  }
+  .quick-action-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    padding:18px 6px;border-radius:16px;border:none;
+    border:1px solid var(--glass-3);
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    backdrop-filter:blur(14px) saturate(180%);
+    -webkit-backdrop-filter:blur(14px) saturate(180%);
+    color:var(--txt-1);font-family:'Quicksand',sans-serif;font-weight:600;
+    font-size:.7rem;text-align:center;cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 14px rgba(0,0,0,0.25);
+    transition:transform .25s ease, background .25s ease;
+  }
+  .quick-action-btn .qa-icon{font-size:1.5rem;}
+  .quick-action-btn:hover{
+    transform:translateY(-3px);
+    background:linear-gradient(135deg, var(--glass-3), var(--glass-4));
+  }
+
+  .dash-restart-link{
+    display:block;text-align:center;margin:22px 0 6px;
+    color:var(--txt-3);font-size:.7rem;
+    font-family:'Quicksand',sans-serif;cursor:pointer;
+  }
+  .dash-restart-link:hover{color:var(--txt-2);}
+  /*------------ flip card --------------------- */
+  /* ---------- FLIP CARD WIDGET (Buzón) ---------- */
+  .card.dash-widget {
+    flex: 1;
+    aspect-ratio: 1/0.9;
+    overflow: visible;
+    perspective: 1000px; 
+    background: none; border: none; box-shadow: none; padding: 0; backdrop-filter: none;
+  }
+  .card.dash-widget .content {
+    width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 18px;
+  }
+  .card.dash-widget:hover .content {
+    transform: rotateY(180deg);
+  }
+  
+  .card.dash-widget .front, .card.dash-widget .back {
+    position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 18px; overflow: hidden;
+    display: flex; justify-content: center; align-items: center;
+  }
+
+  /* --- LUCES ROTATORIAS PARA AMBAS CARAS --- */
+  .card.dash-widget .front::before, .card.dash-widget .back::before {
+    position: absolute; content: ''; display: block;
+    width: 150px; height: 150%;
+    background: linear-gradient(90deg, transparent, var(--pink-glow), var(--accent-violet), var(--pink-glow), transparent);
+    animation: rotation_481 4000ms infinite linear;
+  }
+  @keyframes rotation_481 { 0% { transform: rotateZ(0deg); } 100% { transform: rotateZ(360deg); } }
+
+    /* =========================================
+     LADO FRONTAL (Corregido para Tema Claro)
+     ========================================= */
+  .card.dash-widget .front {
+    transform: rotateY(0deg);
+    background: var(--page-bg); /* Antes decía var(--space-black) */
+  }
+  .card.dash-widget .front-content {
+    position: absolute; width: calc(100% - 4px); height: calc(100% - 4px);
+    background: var(--page-bg); /* Se adapta al modo claro/oscuro */
+    border-radius: 16px; color: var(--txt-1);
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px;
+    z-index: 2;
+  }
+
+  /* =========================================
+     LADO TRASERO (Corregido para Tema Claro)
+     ========================================= */
+  .card.dash-widget .back {
+    transform: rotateY(180deg);
+    background: var(--page-bg); /* Se adapta al modo claro/oscuro */
+  }
+
+  .card.dash-widget .back-content {
+    position: absolute; width: calc(100% - 4px); height: calc(100% - 4px);
+    border-radius: 16px; border: 1px solid var(--glass-3);
+    
+    /* BLUR EXTREMO: Oculta el texto de atrás por completo */
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+    backdrop-filter: blur(45px) saturate(200%);
+    -webkit-backdrop-filter: blur(45px) saturate(200%);
+    
+    overflow: hidden; z-index: 2;
+    padding: 12px; display: flex; flex-direction: column; justify-content: space-between;
+  }
+
+  /* Detalles del texto de la cara de cristal */
+  .card.dash-widget .badge {
+    background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 8px;
+    backdrop-filter: blur(5px); width: fit-content; font-size: 0.65rem; font-weight: 600; color: var(--txt-1);
+  }
+  .card.dash-widget .description {
+    width: 100%; padding: 8px; background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); text-align: left; color: var(--txt-1);
+  }
+  .card.dash-widget .title { font-size: 0.95rem; margin: 0; font-weight: bold; }
+  .card.dash-widget .card-footer { color: var(--txt-2); margin-top: 2px; font-size: 0.7rem; }
+  
+  /* Bolitas flotantes detrás del cristal */
+  .card.dash-widget .img { position: absolute; inset: 0; z-index: -1; }
+  .card.dash-widget .circle {
+    width: 70px; height: 70px; border-radius: 50%;
+    background-color: var(--accent-violet); position: absolute;
+    filter: blur(15px); animation: floating 2600ms infinite linear; opacity: 0.5;
+  }
+  .card.dash-widget #bottom { background-color: var(--pink-glow); left: 10%; top: 30%; width: 60px; height: 60px; animation-delay: -800ms; }
+  .card.dash-widget #right { background-color: var(--coupon-red); left: 60%; top: -10%; width: 50px; height: 50px; animation-delay: -1800ms; }
+  @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(8px); } 100% { transform: translateY(0px); } }
+
+  /* ---------- barra de navegación inferior (cristal difuminado) ---------- */
+  .bottom-nav{
+    position:relative;z-index:2;
+    margin:14px auto 0;
+    align-self:center;
+    width:max-content;
+    display:flex;justify-content:center;align-items:center;gap:6px;
+    padding:8px;border-radius:26px;
+    background:var(--glass-2);
+    border:1px solid var(--glass-3);
+    backdrop-filter:blur(10px) saturate(110%);
+    -webkit-backdrop-filter:blur(10px) saturate(110%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .bottom-nav-btn{
+    position:relative;
+    width:56px;height:46px;border:none;border-radius:18px;
+    background:transparent;color:var(--txt-2);
+    font-size:1.15rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .25s ease, color .25s ease;
+  }
+  .bottom-nav-btn.active{
+    background:linear-gradient(135deg, var(--pink-glow), var(--accent-violet));
+    color:#fff;
+  }
+
+  /* ---------- NOTIFICACIONES: badge + panel flotante de cristal ---------- */
+  .notif-badge{
+    position:absolute;top:2px;right:5px;
+    min-width:16px;height:16px;padding:0 4px;
+    background:#ff3b30;color:#fff;
+    font-size:.62rem;font-weight:700;
+    border-radius:999px;
+    display:none;align-items:center;justify-content:center;
+    line-height:1;font-family:'Quicksand',sans-serif;
+    box-shadow:0 0 0 2px rgba(5,4,22,0.5);
+  }
+  .notif-badge.show{display:flex;}
+
+  .notif-overlay{
+    display:none;position:fixed;inset:0;z-index:45;
+  }
+  .notif-overlay.show{display:block;}
+
+  .notif-panel{
+    position:fixed;left:50%;bottom:calc(14px + 74px);
+    transform:translateX(-50%) translateY(14px);
+    width:min(340px,90vw);max-height:56vh;
+    background:linear-gradient(160deg, rgba(255,255,255,0.22), rgba(255,255,255,0.05));
+    border:1px solid rgba(255,255,255,0.28);
+    border-radius:24px;
+    backdrop-filter:blur(30px) saturate(200%);
+    -webkit-backdrop-filter:blur(30px) saturate(200%);
+    box-shadow:0 24px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.35);
+    padding:18px 16px;
+    opacity:0;pointer-events:none;
+    transition:opacity .3s ease, transform .3s cubic-bezier(.2,.8,.3,1);
+    z-index:46;overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .notif-overlay.show .notif-panel{
+    opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;
+  }
+  .notif-panel::before{
+    content:'';position:absolute;inset:0;pointer-events:none;border-radius:24px;
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255,255,255,0.28), transparent 55%),
+      radial-gradient(circle at 78% 78%, rgba(255,255,255,0.16), transparent 50%);
+    mix-blend-mode:overlay;
+    animation:notif-water-shimmer 8s ease-in-out infinite;
+  }
+  @keyframes notif-water-shimmer{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(4%,-3%) scale(1.06);}
+  }
+  .notif-panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:12px;flex-shrink:0;position:relative;z-index:1;
+  }
+  .notif-panel-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
+    color:var(--txt-1);font-size:1.15rem;margin:0;
+  }
+  .notif-close-btn{
+    width:28px;height:28px;border-radius:50%;border:none;flex-shrink:0;
+    background:rgba(255,255,255,0.16);color:var(--txt-1);
+    font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .notif-list{
+    overflow-y:auto;display:flex;flex-direction:column;gap:8px;
+    position:relative;z-index:1;
+  }
+  .notif-empty{color:var(--txt-2);font-size:.82rem;text-align:center;padding:22px 8px;}
+  .notif-item{
+    display:flex;gap:10px;align-items:flex-start;
+    background:rgba(255,255,255,0.09);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:14px;padding:10px 12px;
+    transition:background .4s ease, border-color .4s ease;
+  }
+  .notif-item.unread{
+    background:linear-gradient(135deg, rgba(255,122,176,0.2), rgba(177,153,255,0.12));
+    border-color:rgba(255,255,255,0.24);
+  }
+  .notif-icon{font-size:1.25rem;line-height:1;flex-shrink:0;margin-top:1px;}
+  .notif-body{flex:1;min-width:0;}
+  .notif-text{color:var(--txt-1);font-size:.82rem;margin:0 0 3px;line-height:1.35;}
+  .notif-time{color:var(--txt-3);font-size:.68rem;margin:0;}
+
+  /* ---------- TAMAGOTCHI: maceta de lavanda ---------- */
+  .plant-card{
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:20px;padding:18px 18px 22px;text-align:center;
+    backdrop-filter:blur(12px) saturate(160%);
+    -webkit-backdrop-filter:blur(12px) saturate(160%);
+  }
+  .plant-streak{color:var(--pink-glow);font-size:.78rem;font-weight:600;margin-bottom:2px;}
+  .plant-pot{position:relative;height:104px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;}
+  .plant-stage{display:flex;align-items:flex-end;justify-content:center;height:66px;}
+  /* --- NUEVA MACETA EN CSS (Estilo Terracota 3D) --- */
+  .css-pot {
+    position: relative;
+    width: 44px;
+    height: 36px;
+    background: linear-gradient(to right, #a34e2e, #d47453 25%, #8c3f22 80%);
+    border-radius: 4px 4px 18px 18px;
+    margin-top: 2px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  }
+  
+  /* El borde superior de la maceta (el labio) */
+  .css-pot::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -4px;
+    width: 52px;
+    height: 10px;
+    background: linear-gradient(to right, #b85b37, #e88d67 25%, #9c4828 80%);
+    border-radius: 4px;
+    box-shadow: 0 3px 5px rgba(0,0,0,0.4);
+  }
+  
+  /* La tierrita oscura donde va plantada la semilla */
+  .css-pot::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 4px;
+    width: 36px;
+    height: 5px;
+    background: #311c11; /* Color tierra húmeda */
+    border-radius: 50%;
+  }
+  .plant-bump{animation:plant-bump .6s ease;}
+  @keyframes plant-bump{
+    0%,100%{transform:scale(1);}
+    40%{transform:scale(1.15);}
+  }
+  .watering-drop{
+    position:absolute;top:0;font-size:1rem;opacity:0;pointer-events:none;
+    animation:drop-fall .9s ease-in forwards;
+  }
+  @keyframes drop-fall{
+    0%{opacity:0;transform:translateY(-20px);}
+    25%{opacity:1;}
+    100%{opacity:0;transform:translateY(50px);}
+  }
+  .water-btn{
+    position:relative;overflow:hidden;margin-top:12px;
+    padding:10px 26px;border:1px solid rgba(255,255,255,0.5);
+    border-radius:999px;
+    background:linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0.08) 55%, rgba(255,255,255,0.22));
+    backdrop-filter:blur(16px) saturate(180%);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;
+    font-size:.85rem;cursor:pointer;
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.7),
+      inset 0 -6px 10px rgba(255,255,255,0.1),
+      inset 0 8px 18px rgba(255,122,176,0.18),
+      0 8px 20px rgba(0,0,0,0.3);
+    transition:transform .2s ease;
+  }
+  .water-btn:hover{transform:translateY(-2px);}
+  .water-btn:active{transform:translateY(0) scale(0.97);}
+  body.theme-light .water-btn{color:#000;}
+  .plant-msg{color:var(--txt-2);font-size:.76rem;margin-top:10px;min-height:1.2em;}
+
+  /* ---------- MOOD TRACKER ---------- */
+  .mood-card{
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:20px;padding:20px 18px;text-align:center;
+    backdrop-filter:blur(12px) saturate(160%);
+    -webkit-backdrop-filter:blur(12px) saturate(160%);
+  }
+  .mood-prompt{color:var(--txt-1);font-size:.85rem;margin:0 0 12px;}
+
+  /* --- NUEVO: Botón principal que abre las reacciones --- */
+  .mood-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--glass-4);
+    border: 1px solid var(--glass-3);
+    padding: 10px 24px;
+    border-radius: 30px;
+    color: var(--txt-1);
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    margin-bottom: 10px;
+  }
+  .mood-trigger-btn:hover { background: var(--glass-3); transform: translateY(-2px); }
+
+  /* --- NUEVO: Barra flotante tipo Facebook (Glassmorphism) --- */
+  .mood-floating-bar {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px) scale(0.8);
+    background: linear-gradient(135deg, var(--glass-3), var(--glass-4));
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border: 1px solid var(--glass-3);
+    border-radius: 35px;
+    padding: 8px 14px;
+    display: flex;
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.4);
+    z-index: 10;
+  }
+
+  .mood-floating-bar.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  /* --- NUEVO: Emojis individuales dentro de la barra --- */
+  /* Emojis individuales dentro de la barra */
+  .mood-fb-btn {
+    background: none;
+    border: none;
+    font-size: 2.2rem; /* Un poco más grandes */
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    filter: grayscale(30%) opacity(0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* El SPAN interno es el que tiene la animación continua */
+  .mood-fb-btn span {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  /* Animaciones constantes para darles "vida" */
+  @keyframes laugh { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
+  @keyframes breathe { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+  @keyframes shake { 0%,100%{transform:rotate(0deg);} 25%{transform:rotate(-8deg);} 75%{transform:rotate(8deg);} }
+
+  .mood-fb-btn[data-emoji="😄"] span { animation: laugh 0.8s ease-in-out infinite; }
+  .mood-fb-btn[data-emoji="😴"] span { animation: breathe 2s ease-in-out infinite; }
+  .mood-fb-btn[data-emoji="🥺"] span { animation: breathe 1.5s ease-in-out infinite; }
+  .mood-fb-btn[data-emoji="😍"] span { animation: breathe 1.2s ease-in-out infinite; }
+  .mood-fb-btn[data-emoji="🫩"] span { animation: shake 0.5s ease-in-out infinite; }
+  .mood-fb-btn[data-emoji="😠"] span { animation: shake 0.3s ease-in-out infinite; }
+
+  /* ESTADO CUANDO EL DEDO PASA POR ENCIMA (Controlado por JS) */
+  .mood-fb-btn.hovered {
+    transform: translateY(-15px);
+    filter: grayscale(0%) opacity(1);
+    z-index: 2;
+  }
+  .mood-fb-btn.hovered span {
+    transform: scale(1.5); /* Crece al seleccionarlo */
+  }
+
+  /* Etiqueta (Tooltip) Feliz, Triste, etc. */
+  .mood-fb-btn::after {
+    content: attr(data-label);
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.5);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Aparece la etiqueta cuando el dedo está encima */
+  .mood-fb-btn.hovered::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  /* Texto de lo que siente tu pareja */
+  .mood-partner {
+    color: var(--txt-1);
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin: 10px 0 0;
+  }
+
+  /* Nota tierna debajo del estado */
+  .mood-care-note {
+    color: var(--pink-glow);
+    font-size: 0.8rem;
+    font-style: italic;
+    margin: 10px 0 0;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* ---------- CUPONERA (estilo boleto/vale de papel) ---------- */
+  .coupon-carousel-wrap{margin-bottom:4px;}
+  .coupon-carousel{
+    display:flex;gap:20px;overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    padding:14px 0 20px;margin:0;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .coupon-carousel::-webkit-scrollbar{display:none;}
+  .coupon-card{
+    flex:0 0 auto;scroll-snap-align:center;
+    width:min(215px,66vw);
+    height:296px;
+    position:relative;
+    display:flex;
+    background:#ffffff;
+    border:2px solid var(--coupon-red);
+    border-radius:16px;
+    box-shadow:0 16px 30px rgba(0,0,0,0.4);
+    -webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20215%20296'%3E%3Crect%20x='0'%20y='0'%20width='215'%20height='296'%20rx='16'%20fill='white'/%3E%3Cg%20fill='black'%3E%3Ccircle%20cx='0'%20cy='18'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='48'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='78'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='108'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='138'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='168'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='198'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='228'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='258'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='288'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='18'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='48'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='78'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='108'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='138'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='168'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='198'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='228'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='258'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='288'%20r='8'/%3E%3C/g%3E%3C/svg%3E");
+    mask-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20215%20296'%3E%3Crect%20x='0'%20y='0'%20width='215'%20height='296'%20rx='16'%20fill='white'/%3E%3Cg%20fill='black'%3E%3Ccircle%20cx='0'%20cy='18'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='48'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='78'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='108'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='138'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='168'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='198'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='228'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='258'%20r='8'/%3E%3Ccircle%20cx='0'%20cy='288'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='18'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='48'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='78'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='108'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='138'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='168'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='198'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='228'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='258'%20r='8'/%3E%3Ccircle%20cx='215'%20cy='288'%20r='8'/%3E%3C/g%3E%3C/svg%3E");
+    -webkit-mask-size:100% 100%;mask-size:100% 100%;
+    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+    -webkit-mask-position:center;mask-position:center;
+    transform-origin:center center;
+    transition:transform .45s cubic-bezier(.22,.61,.36,1), opacity .45s ease, filter .45s ease;
+  }
+  .coupon-inner{
+    margin:12px;flex:1;min-width:0;
+    border:1px solid rgba(230,53,95,0.35);
+    border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:16px 14px;text-align:center;
+  }
+  .coupon-stars{color:var(--coupon-red);font-size:.7rem;letter-spacing:7px;margin:0 0 10px;}
+  .coupon-icon{font-size:2.1rem;margin-bottom:8px;line-height:1;}
+  .coupon-vale{
+    color:#a98d94;font-size:.66rem;margin:0 0 4px;
+    letter-spacing:1.2px;text-transform:uppercase;font-family:'Quicksand',sans-serif;font-weight:600;
+  }
+  .coupon-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;
+    color:#181818;font-size:1.16rem;margin:0 0 8px;line-height:1.25;
+  }
+  .coupon-desc{color:#2b2b2b;font-size:.76rem;margin:0 0 14px;line-height:1.4;}
+  .coupon-sep{
+    width:72%;height:0;margin:0 0 14px;
+    border-top:1.5px dashed var(--coupon-red);opacity:.6;
+  }
+  .coupon-redeem-btn{
+    padding:10px 22px;border:none;border-radius:999px;
+    background:var(--coupon-red);
+    color:#fff;font-family:'Quicksand',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;
+    letter-spacing:.3px;
+    box-shadow:0 8px 16px rgba(230,53,95,0.4);
+    transition:transform .2s ease;
+  }
+  .coupon-redeem-btn:hover{transform:translateY(-2px);}
+  .coupon-redeem-btn:active{transform:translateY(0) scale(0.96);}
+  .coupon-dots{display:flex;justify-content:center;gap:6px;margin-top:6px;}
+  .coupon-dot{
+    width:6px;height:6px;border-radius:50%;background:var(--glass-3);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .coupon-dot.active{background:var(--pink-glow);transform:scale(1.3);}
+  .coupon-empty-msg{
+    color:var(--txt-2);font-size:.85rem;text-align:center;
+    padding:26px 16px;width:100%;
+  }
+
+  /* ---------- estatus de canje (debajo de la cuponera) ---------- */
+  .coupon-status-panel{
+    position:relative;
+    margin:14px 0 6px;
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid var(--glass-3);
+    border-radius:18px;padding:16px;text-align:center;
+    backdrop-filter:blur(14px) saturate(180%);
+    -webkit-backdrop-filter:blur(14px) saturate(180%);
+    animation:coupon-status-in .35s ease;
+  }
+  @keyframes coupon-status-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .coupon-status-icon{font-size:2.3rem;margin-bottom:6px;line-height:1;}
+  .coupon-status-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
+    color:var(--txt-1);font-size:1.05rem;margin:0 0 4px;
+  }
+  .coupon-status-text{font-size:.82rem;margin:0;font-weight:600;}
+  .coupon-status-text.ok{color:#7cffb2;}
+  .coupon-status-text.fail{color:#ff8a8a;}
+  body.theme-light .coupon-status-text.ok{color:#1f8a4c;}
+  .coupon-ack-btn{
+    margin-top:10px;background:none;border:none;cursor:pointer;
+    font-size:1.4rem;line-height:1;display:inline-flex;
+    transition:transform .15s ease;
+  }
+  .coupon-ack-btn:hover{transform:scale(1.15);}
+  .coupon-status-panel.splitting > *:not(.coupon-split-half){opacity:0;}
+  .coupon-split-half{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    padding:inherit;box-sizing:border-box;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .coupon-split-half.left{clip-path:inset(0 50% 0 0);}
+  .coupon-split-half.right{clip-path:inset(0 0 0 50%);}
+  .coupon-split-half.animate.left{animation:coupon-split-left .7s ease forwards;}
+  .coupon-split-half.animate.right{animation:coupon-split-right .7s ease forwards;}
+  @keyframes coupon-split-left{to{transform:translateX(-50px) rotate(-10deg);opacity:0;}}
+  @keyframes coupon-split-right{to{transform:translateX(50px) rotate(10deg);opacity:0;}}
+  body.theme-light .coupon-status-text.fail{color:#d43d3d;}
+
+  /* ---------- CÁPSULA DEL TIEMPO ---------- */
+  .capsule-card{
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:20px;padding:28px 20px;text-align:center;
+    backdrop-filter:blur(12px) saturate(160%);
+    -webkit-backdrop-filter:blur(12px) saturate(160%);
+  }
+  .capsule-lock-icon{
+    font-size:2.2rem;margin-bottom:10px;
+    animation:capsule-glow 2.6s ease-in-out infinite;
+  }
+  @keyframes capsule-glow{
+    0%,100%{filter:drop-shadow(0 0 0px var(--pink-glow));}
+    50%{filter:drop-shadow(0 0 14px var(--pink-glow));}
+  }
+  .capsule-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
+    color:var(--txt-1);font-size:1.1rem;margin:0 0 10px;
+  }
+  .capsule-countdown{
+    color:var(--pink-glow);font-size:1rem;font-weight:600;
+    font-family:'Quicksand',sans-serif;letter-spacing:.3px;margin:0;
+  }
+  .capsule-reveal{margin-top:18px;text-align:left;}
+  .capsule-image{
+    display:block;width:100%;border-radius:14px;margin-bottom:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  }
+  .capsule-text{
+    color:var(--txt-1);font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:1rem;line-height:1.6;
+  }
+  .capsule-text p{margin:0 0 10px;}
+
+
+  .back-btn{
+    position:absolute;top:6%;left:6%;z-index:5;
+    width:40px;height:40px;padding:0;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid var(--glass-3);
+    border-radius:50%;
+    color:var(--txt-1);font-size:1.15rem;cursor:pointer;
+    backdrop-filter:blur(10px) saturate(180%);
+    -webkit-backdrop-filter:blur(10px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 14px rgba(0,0,0,0.25);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .back-btn:hover{background:linear-gradient(135deg, var(--glass-3), var(--glass-4));transform:translateY(-2px);}
+
+  .diario-box, .album-box{
+    position:relative;z-index:3;width:min(480px,88vw);
+    text-align:center;max-height:82vh;overflow-y:auto;
+  }
+  .panel-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+    color:var(--txt-1);font-size:1.6rem;margin:0 0 6px;
+  }
+  .panel-sub{color:var(--txt-2);font-size:.85rem;margin:0 0 22px;}
+  .panel-hint{color:var(--txt-3);font-size:.72rem;margin-top:14px;line-height:1.4;}
+
+  #diarioText{
+    width:100%;min-height:150px;border-radius:14px;padding:16px;
+    background:var(--glass-4);border:1px solid var(--glass-3);
+    color:var(--txt-1);font-family:'Cormorant Garamond',serif;font-size:16px;
+    resize:vertical;outline:none;transition:border .2s ease;
+  }
+  #diarioText:focus{border-color:var(--accent-violet);}
+  #diarioText::placeholder{color:var(--txt-3);}
+
+  .action-btn{
+    display:inline-block;margin-top:16px;padding:12px 26px;border:none;
+    border-radius:30px;cursor:pointer;
+    background:linear-gradient(135deg,var(--pink-glow),var(--accent-violet));
+    color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;
+    font-size:.9rem;letter-spacing:.3px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.45),
+      inset 0 -2px 4px rgba(0,0,0,0.15),
+      0 6px 18px rgba(255,122,176,0.3);
+    transition:filter .2s ease, transform .2s ease;
+  }
+  .action-btn:hover{filter:brightness(1.12);transform:translateY(-1px);}
+  .action-btn.secondary{
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid var(--glass-3);
+    backdrop-filter:blur(10px) saturate(180%);
+    -webkit-backdrop-filter:blur(10px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 14px rgba(0,0,0,0.2);
+  }
+
+  .gallery{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+    gap:10px;margin:18px 0;max-height:36vh;overflow-y:auto;
+  }
+  .gallery img{
+    width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;
+    border:1px solid var(--glass-3);
+    box-shadow:0 4px 14px rgba(0,0,0,0.35);
+  }
+
+  /* ---------- NUESTRO BUZÓN ---------- */
+  #scene-buzon{
+    background:radial-gradient(ellipse at top, #3d2c1e 0%, #241a12 70%);
+    align-items:flex-start;
+  }
+  .buzon-wrap{
+    position:relative;z-index:2;width:min(480px,92vw);height:88%;
+    margin:6% auto 0;display:flex;flex-direction:column;
+  }
+  .buzon-header{
+    position:relative;
+    display:flex;align-items:center;justify-content:flex-end;
+    min-height:36px;margin-bottom:14px;
+  }
+  .buzon-title{
+    position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    white-space:nowrap;
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+    color:#f3e6c8;font-size:1.3rem;
+  }
+  .signature-btn{
+    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+    color:#f3e6c8;padding:7px 14px;border-radius:20px;
+    font-family:'Quicksand',sans-serif;font-size:.72rem;cursor:pointer;
+  }
+  .corkboard{
+    flex:1;overflow-y:auto;border-radius:18px;
+    background:
+      radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1.4px) 0 0/14px 14px,
+      linear-gradient(135deg, #b9884f, #a4713a);
+    box-shadow:inset 0 0 40px rgba(0,0,0,0.35);
+    padding:20px;
+    display:flex;flex-wrap:wrap;align-content:flex-start;gap:16px;
+  }
+  .corkboard-empty{
+    width:100%;text-align:center;color:rgba(255,255,255,0.6);
+    font-family:'Quicksand',sans-serif;font-size:.85rem;margin-top:30px;
+  }
+  /* ---------- NUESTRO BUZÓN ---------- */
+  .sticky-note{
+    position: relative; /* <--- NUEVO: Necesario para posicionar el corazón */
+    width:130px;min-height:130px;padding:14px 12px 10px;
+    background:#fff6c8;color:#4a3f1e;
+    box-shadow:2px 4px 10px rgba(0,0,0,0.35);
+    font-family:'Quicksand',sans-serif;font-size:.8rem;line-height:1.35;
+    display:flex;flex-direction:column;justify-content:space-between;
+    cursor: pointer; /* <--- NUEVO: Indica que se puede tocar */
+    -webkit-tap-highlight-color: transparent; /* Quita el brillo azul al tocar en móviles */
+  }
+  .sticky-note:nth-child(3n){background:#ffd6e8;}
+  .sticky-note:nth-child(3n+1){background:#cdeaff;}
+  .sticky-note:nth-child(5n){background:#d8f5cf;}
+  
+  /* --- NUEVO: ESTILOS Y ANIMACIÓN DEL CORAZÓN (DOBLE TAP) --- */
+  .note-heart {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 1.6rem;
+    color: #ff3b5c;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    transform: scale(0);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none; /* Para que no estorbe al dar click */
+    z-index: 10;
+  }
+  
+  /* Cuando la nota tiene la clase 'liked', el corazón aparece y salta */
+  .sticky-note.liked .note-heart {
+    transform: scale(1) rotate(15deg);
+    animation: pop-heart 0.4s ease-out;
+  }
+  
+  @keyframes pop-heart {
+    0% { transform: scale(0) rotate(0deg); }
+    60% { transform: scale(1.3) rotate(25deg); }
+    100% { transform: scale(1) rotate(15deg); }
+  }
+  /* ----------------------------------------------------------- */
+  .sticky-note:nth-child(3n){background:#ffd6e8;}
+  .sticky-note:nth-child(3n+1){background:#cdeaff;}
+  .sticky-note:nth-child(5n){background:#d8f5cf;}
+  .sticky-note-text{white-space:pre-wrap;word-break:break-word;}
+  .sticky-note-meta{
+    margin-top:10px;font-size:.65rem;color:rgba(0,0,0,0.5);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .sticky-note-sign{font-family:'Dancing Script',cursive;font-weight:700;font-size:.95rem;}
+
+  .buzon-actions-row{
+    position:absolute;bottom:4%;left:50%;transform:translateX(-50%);
+    display:flex;gap:10px;z-index:3;flex-wrap:wrap;justify-content:center;
+  }
+  .add-note-btn{
+    background:linear-gradient(135deg,var(--pink-glow),var(--accent-violet));
+    color:#fff;border:none;padding:13px 22px;border-radius:30px;
+    font-family:'Quicksand',sans-serif;font-weight:600;font-size:.85rem;
+    cursor:pointer;box-shadow:0 8px 22px rgba(255,122,176,0.4);
+    white-space:nowrap;
+  }
+
+  .note-modal-overlay{
+    display:none;position:fixed;inset:0;z-index:30;
+    background:rgba(5,4,22,0.7);align-items:center;justify-content:center;padding:24px;
+  }
+  .note-modal-overlay.show{display:flex;}
+  .note-modal{
+    width:min(340px,88vw);
+    background:linear-gradient(135deg, var(--glass-2), var(--glass-1));
+    border:1px solid var(--glass-3);
+    backdrop-filter:blur(18px) saturate(180%);
+    -webkit-backdrop-filter:blur(18px) saturate(180%);
+    border-radius:20px;padding:26px 22px;text-align:center;
+  }
+  .note-modal p.title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;
+    color:var(--txt-1);font-size:1.15rem;margin:0 0 14px;
+  }
+  .note-modal textarea{
+    width:100%;min-height:110px;border-radius:12px;padding:12px;
+    background:var(--glass-4);border:1px solid var(--glass-3);
+    color:var(--txt-1);font-family:'Quicksand',sans-serif;font-size:16px;
+    resize:vertical;outline:none;
+  }
+  .note-modal-sign{color:var(--txt-3);font-size:.75rem;margin:10px 0 4px;}
+  .note-modal-actions{display:flex;gap:10px;margin-top:14px;}
+  .note-modal-actions button{flex:1;}
+
+  /* ---------- editor de carta (buzón mutuo) ---------- */
+  .mail-editor-modal{
+    width:min(380px,90vw);max-height:86vh;overflow-y:auto;
+    text-align:left;
+  }
+  .mail-editor-modal p.title{text-align:center;}
+  .mail-editor-modal label{
+    display:block;color:var(--txt-2);font-size:.72rem;margin:12px 0 4px;
+  }
+  .mail-editor-modal input, .mail-editor-modal textarea{
+    width:100%;padding:10px 12px;border-radius:10px;
+    background:var(--glass-4);border:1px solid var(--glass-3);
+    color:var(--txt-1);font-size:16px;font-family:'Quicksand',sans-serif;
+    outline:none;resize:vertical;
+  }
+  .mail-editor-modal input:focus, .mail-editor-modal textarea:focus{border-color:var(--accent-violet);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001s !important; animation-iteration-count:1 !important;}
+  }
 </style>
+<!-- Firebase (registro de visitas/logins) -->
+<script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
+  <svg style="display: none;">
+  <defs>
+    <filter id="distorsion">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="turbulence" />
+      <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="8" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
+
 <!-- ================================================================
-     HTML — estructura
+      HTML 
      ================================================================ -->
-<div class="screen" id="loginScreen">
-  <form class="card" id="loginForm">
-    <h1>Tus estadísticas 💜</h1>
-    <input type="email" id="emailInput" placeholder="Tu correo" autocomplete="off" required>
-    <input type="password" id="passInput" placeholder="Tu contraseña" autocomplete="off" required>
-    <button type="submit">Entrar</button>
-    <p class="error-msg" id="errorMsg"></p>
-  </form>
-</div>
 
-<div class="screen" id="dashScreen">
-  <div class="dash-wrap">
-
-    <!-- ---------- HUB: pantalla principal ---------- -->
-    <div class="section-panel active" id="section-hub">
-      <p class="dash-title">Para ti · Panel</p>
-      <div class="hub-grid">
-        <button class="hub-card" data-section="letter">
-          <span class="hub-icon">💌</span>
-          <span class="hub-label">Carta</span>
-        </button>
-        <button class="hub-card" data-section="stats">
-          <span class="hub-icon">📊</span>
-          <span class="hub-label">Estadísticas</span>
-        </button>
-        <button class="hub-card" data-section="coupons">
-          <span class="hub-icon">🎟️</span>
-          <span class="hub-label">Cupones</span>
-        </button>
-        <button class="hub-card" data-section="capsule">
-          <span class="hub-icon">⏳</span>
-          <span class="hub-label">Cápsula del tiempo</span>
-        </button>
-      </div>
-      <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
-    </div>
-
-    <!-- ---------- SECCIÓN: CARTA ---------- -->
-    <div class="section-panel" id="section-letter">
-      <div class="section-header">
-        <button class="back-btn" data-back>← volver</button>
-        <p class="section-title">Carta</p>
-        <span class="header-spacer"></span>
-      </div>
-
-      <div class="letter-status" id="letterStatus">Cargando estado de la carta...</div>
-
-      <div class="letter-editor">
-        <p class="editor-title">✏️ Editar la carta</p>
-        <label>Dedicatoria</label>
-        <input type="text" id="editDedication" placeholder="Mi futura esposa.">
-        <label>Fecha</label>
-        <input type="text" id="editDate" placeholder="15 Jul 26">
-        <label>Contenido (separa cada párrafo dejando una línea en blanco entre uno y otro)</label>
-        <textarea id="editBody" rows="10"></textarea>
-        <label>Posdata</label>
-        <textarea id="editPs" rows="3"></textarea>
-        <label>Firma</label>
-        <input type="text" id="editSignature" placeholder="Con amor, E.C.">
-        <button class="letter-reset-btn" id="saveLetterBtn" style="margin-top:14px;">💾 Guardar cambios</button>
-        <p class="save-msg" id="saveMsg"></p>
-      </div>
-
-      <button class="letter-reset-btn" id="previewLetterBtn" style="background:linear-gradient(135deg, rgba(124,92,214,0.18), rgba(255,255,255,0.5));border-color:rgba(124,92,214,0.4);">Vista previa </button>
-      <button class="letter-reset-btn" id="resetLetterBtn">💌 Mostrar/Enviar </button>
-    </div>
-
-    <!-- ---------- SECCIÓN: ESTADÍSTICAS ---------- -->
-    <div class="section-panel" id="section-stats">
-      <div class="section-header sticky">
-        <button class="back-btn" data-back>← volver</button>
-        <p class="section-title">Estadísticas</p>
-        <button class="refresh-btn-icon" id="refreshBtn" title="Actualizar">↻</button>
-      </div>
-
-      <div class="stat-cards">
-        <div class="stat-card">
-          <div class="stat-num" id="visitCount">–</div>
-          <div class="stat-label">visitas</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="loginCount">–</div>
-          <div class="stat-label">inicios de sesión</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="letterCount">–</div>
-          <div class="stat-label">cartas leídas</div>
-        </div>
-      </div>
-
-      <div class="tab-bar">
-        <button class="tab-btn active" data-tab="recent">Reciente</button>
-        <button class="tab-btn" data-tab="calendar">Calendario</button>
-        <button class="tab-btn" data-tab="favorites">Favoritos</button>
-      </div>
-
-      <!-- Pestaña: actividad reciente -->
-      <div class="tab-panel active" id="tab-recent">
-        <p class="activity-title">Actividad reciente</p>
-        <ul class="activity-list" id="activityList"></ul>
-      </div>
-
-      <!-- Pestaña: calendario -->
-      <div class="tab-panel" id="tab-calendar">
-        <div class="cal-header">
-          <button class="cal-nav-btn" id="calPrevBtn">‹</button>
-          <span class="cal-month-label" id="calMonthLabel"></span>
-          <button class="cal-nav-btn" id="calNextBtn">›</button>
-        </div>
-        <div class="cal-grid" id="calGrid"></div>
-        <p class="activity-title" id="calDayTitle">Selecciona un día para ver su actividad</p>
-        <ul class="activity-list" id="calDayList"></ul>
-      </div>
-
-      <!-- Pestaña: favoritos -->
-      <div class="tab-panel" id="tab-favorites">
-        <p class="activity-title">Favoritos</p>
-        <ul class="activity-list" id="favoritesList"></ul>
-      </div>
-
-      <p class="loading-msg" id="loadingMsg" style="display:none;">Cargando...</p>
-    </div>
-
-    <!-- ---------- SECCIÓN: CUPONES ---------- -->
-    <div class="section-panel" id="section-coupons">
-      <div class="section-header">
-        <button class="back-btn" data-back>← volver</button>
-        <p class="section-title">Cupones</p>
-        <span class="header-spacer"></span>
-      </div>
-      <ul class="coupon-admin-list" id="couponAdminList">
-        <li class="empty-msg">Cargando cupones…</li>
-      </ul>
-    </div>
-
-    <!-- ---------- SECCIÓN: CÁPSULA DEL TIEMPO ---------- -->
-    <div class="section-panel" id="section-capsule">
-      <div class="section-header">
-        <button class="back-btn" data-back>← volver</button>
-        <p class="section-title">Cápsula del tiempo</p>
-        <span class="header-spacer"></span>
-      </div>
-
-      <div class="capsule-status" id="capsuleStatus">Cargando estado…</div>
-
-      <div class="letter-editor">
-        <p class="editor-title">⏳ Configurar cápsula</p>
-        <label>Fecha y hora en que se abre</label>
-        <input type="datetime-local" id="capsuleUnlockInput">
-        <label>Título</label>
-        <input type="text" id="capsuleTitleInput" placeholder="Sorpresa de aniversario">
-        <label>Texto (separa párrafos dejando una línea en blanco)</label>
-        <textarea id="capsuleTextInput" rows="6"></textarea>
-        <label>Link de la imagen (opcional)</label>
-        <input type="text" id="capsuleImageInput" placeholder="https://...">
-        <button class="letter-reset-btn" id="saveCapsuleBtn" style="margin-top:14px;">💾 Guardar cápsula</button>
-        <p class="save-msg" id="capsuleSaveMsg"></p>
-      </div>
-    </div>
-
+<div class="update-overlay" id="updateOverlay">
+  <div class="update-box">
+    <div class="update-spinner"></div>
+    <p>✨ Hay cosas nuevas para ti</p>
   </div>
 </div>
 
-<!-- ---------- VISTA PREVIA DE LA CARTA (solo local) ---------- -->
-<div class="preview-overlay" id="previewOverlay">
-  <button class="preview-close" id="previewCloseBtn">✕</button>
-
-  <div class="preview-warning" id="previewWarning">
-    <div class="icon">💌</div>
-    <p class="title">Vista previa</p>
-    <p class="sub">Esto es exactamente lo que ella va a ver. Nada de lo que hagas aquí se guarda ni le llega a su celular.</p>
-    <button class="letter-reset-btn" id="previewOpenBtn" style="margin:0;">Abrir carta</button>
+<!-- ---------- CARTA SORPRESA ---------- -->
+<div class="letter-overlay" id="letterOverlay">
+  <div class="letter-warning" id="letterWarning">
+    <div class="letter-warning-icon">💌</div>
+    <p class="title">Tienes una carta</p>
+    <p class="letter-warning-text">Solo se puede abrir una vez. En cuanto la termines de leer y toques "Leído", desaparecerá para siempre.</p>
+    <button class="action-btn" id="openLetterBtn">Abrir carta</button>
   </div>
 
-  <div class="preview-scroll" id="previewScroll">
-    <div class="preview-rod"></div>
-    <div class="preview-paper" id="previewPaper">
-      <p class="preview-meta" id="previewMeta">Para: Mi futura esposa. &nbsp;|&nbsp; 15 Jul 26</p>
+  <div class="scroll-wrap" id="scrollWrap">
+    <div class="scroll-rod"></div>
+    <div class="scroll-paper" id="scrollPaper">
+      <p class="letter-meta" id="letterMeta">Para: Mi futura esposa. &nbsp;|&nbsp; 15 Jul 26</p>
 
-      <p class="preview-spoiler-hint">toca para leer 💭</p>
-      <div class="preview-spoiler" id="previewSpoiler">
-        <div class="preview-body" id="previewBody">
+      <p class="spoiler-hint">toca para leer 💭</p>
+      <div class="spoiler-block" id="letterSpoiler">
+        <div class="letter-body" id="letterBody">
           <p>Mor, quiero aprovechar q estás durmiendo aquí, encima de mí, para escribirte algunas cosas q siento.</p>
           <p>Me gustas mucho.</p>
           <p>Desde aquel primer mensaje q me mandaste pidiendo la tarea ya sentía una chispa dentro de mí, y lo confirmé cuando te vi por primera vez.</p>
@@ -558,27 +1474,379 @@
         </div>
       </div>
 
-      <p class="preview-ps" id="previewPs">Pd: quiero q sepas q mi deseo es avivar la chispa todos los días contigo. Estoy aquí para buscar aligerar tus días, cuidar nuestra magia y hacerte feliz lo más q pueda ✨♥️🌙</p>
-      <p class="preview-signature" id="previewSignature">Con amor, E.C.</p>
+      <p class="letter-ps" id="letterPs">Pd: quiero q sepas q mi deseo es avivar la chispa todos los días contigo. Estoy aquí para buscar aligerar tus días, cuidar nuestra magia y hacerte feliz lo más q pueda ✨♥️🌙</p>
+      <p class="letter-signature" id="letterSignature">Con amor, E.C.</p>
 
-      <button class="letter-reset-btn" id="previewLeidoBtn" style="margin:6px auto 4px;">Leído</button>
+      <button class="action-btn" id="leidoBtn">Leído</button>
     </div>
-    <div class="preview-rod"></div>
+    <div class="scroll-rod"></div>
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore-compat.js"></script>
+<audio id="bgMusic" loop>
+  <source src="musica.mp3" type="audio/mpeg">
+</audio>
+<div id="app">
+  <button class="install-btn" id="installBtn">📲 Instalar app 
+  </button>
 
-<!-- ================================================================
-     JAVASCRIPT — lógica
-     ================================================================ -->
+  <div class="liquid-panel-backdrop" id="liquidPanelBackdrop"></div>
+  <div class="liquid-side-panel" id="liquidSidePanel">
+    <div class="theme-switch-block">
+      <span class="theme-switch-icon" id="themeSwitchIcon">🌙</span>
+      <button class="theme-switch-track" id="themeSwitch"><span class="theme-switch-thumb"></span></button>
+    </div>
+
+    <div class="accent-picker-block">
+      <button class="accent-trigger-btn" id="accentTriggerBtn" style="background:linear-gradient(135deg,#ff7ab0,#b199ff);" title="Color del año"></button>
+      <div class="accent-swatches vertical" id="accentSwatchesList">
+        <button class="accent-swatch selected" data-accent="" style="background:linear-gradient(135deg,#ff7ab0,#b199ff);" title="Violeta (original)"></button>
+        <button class="accent-swatch" data-accent="verde" style="background:linear-gradient(135deg,#5fd48a,#2f9e63);" title="Verde"></button>
+        <button class="accent-swatch" data-accent="azul" style="background:linear-gradient(135deg,#6fb8ff,#3f7fd6);" title="Azul"></button>
+        <button class="accent-swatch" data-accent="rojo" style="background:linear-gradient(135deg,#ff6f7a,#e6355f);" title="Rojo"></button>
+        <button class="accent-swatch" data-accent="dorado" style="background:linear-gradient(135deg,#ffcf7a,#e0a13a);" title="Dorado"></button>
+        <button class="accent-swatch" data-accent="rosa" style="background:linear-gradient(135deg,#ff8ad1,#d874e0);" title="Rosa"></button>
+      </div>
+    </div>
+
+    <button class="mute-toggle-btn" id="musicBtn" title="Silenciar música">🔊</button>
+  </div>
+
+  <!-- ESCENA 1: LOGIN -->
+  <section id="scene-login" class="scene active">
+    <video class="login-bg-video" id="loginBgVideo" muted playsinline loop autoplay></video>
+
+    <div class="login-blur-strip">
+      <p class="login-quote" id="loginQuote"></p>
+    </div>
+
+    <form class="login-form" id="loginForm">
+     <p class="login-title">Para ti</p>
+     <p class="login-greeting" id="loginGreeting"></p>
+     <p class="login-sub">Entra si sabes el camino</p>
+      <input type="text" id="userInput" placeholder="Usuario" autocomplete="off" required>
+      <input type="password" id="passInput" placeholder="Contraseña" autocomplete="off" required>
+      <button type="submit" class="login-btn">Entrar</button>
+      <p class="login-error" id="loginError">Inténtalo de nuevo.</p>
+    </form>
+  </section>
+
+  <!-- ESCENA 2: UNIVERSO INTERACTIVO -->
+  <section id="scene-universe" class="scene">
+    <div class="starfield" id="starfieldUniverse"></div>
+    <p class="universe-hint">Toca sobre las estrellas…</p>
+    <button class="continue-btn" id="continueBtn">seguir mirando el universo →</button>
+  </section>
+
+  <!-- ESCENA 3: TE AMO -->
+  <section id="scene-final" class="scene">
+    <div class="starfield" id="starfieldFinal"></div>
+    <p class="final-text">Eres la mejor ✨</p>
+  </section>
+
+  <!-- ESCENA 4: DASHBOARD -->
+  <section id="scene-dashboard" class="scene">
+    <div class="starfield-static" id="starfieldDashboard"></div>
+    <div class="accent-particles" id="accentParticles"></div>
+    <div class="dash-wrap">
+
+      <div class="settings-hamburger-row">
+        <button class="hamburger-btn" id="hamburgerBtn" title="Personalización">☰</button>
+      </div>
+
+      <!-- pestaña: inicio -->
+      <div class="dash-tab-panel active" id="dash-tab-home">
+        <div class="dash-header">
+        <div class="card dash-widget clickable" id="buzonWidget">
+  <div class="content">
+    
+    <div class="front">
+      <div class="front-content">
+        <span style="font-size: 2.2rem;">💌</span>
+        <strong style="font-family:'Quicksand', sans-serif; font-size: 1.05rem;">Abrir Buzón</strong>
+      </div>
+    </div>
+    
+    <div class="back">
+      <div class="back-content">
+        <div class="img">
+          <div class="circle"></div>
+          <div class="circle" id="right"></div>
+          <div class="circle" id="bottom"></div>
+        </div>
+        
+        <small class="badge">Nuestro Espacio</small>
+        <div class="description">
+          <div class="title">
+            <p class="title">📮 Buzón</p>
+          </div>
+          <p class="card-footer">notitas para los dos</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+          <div class="dash-widget">
+            <div class="dash-widget-icon">💜</div>
+            <div class="dash-widget-value" id="daysWidgetNum">–</div>
+            <div class="dash-widget-label">días juntos</div>
+          </div>
+        </div>
+
+        <p class="dash-section-title">Tamagotchi</p>
+        <div class="plant-card" id="plantCard">
+          <div class="plant-streak" id="plantStreak">🔥 0 días de racha</div>
+          <div class="plant-pot" id="plantPot">
+            <div class="plant-stage" id="plantStage">
+              <div class="flower-scale" id="plantFlowerScale">
+                <div class="flower-sway">
+                  <div class="flower__cluster" id="plantCluster"></div>
+                  <div class="flower__stem" id="plantStem">
+                    <div class="plant-leaves" id="plantLeaves"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="css-pot"></div>
+          </div>
+          <button class="water-btn" id="waterBtn">💧Dar amor</button>
+          <p class="plant-msg" id="plantMsg"></p>
+        </div>
+
+        <p class="dash-section-title" style="margin-top:22px;">Tu Cora hoy 💓 </p>
+        <div class="mood-card" style="position: relative;">
+        <p class="mood-prompt">¿Cómo te sientes hoy, <span id="moodUserLabel"></span>?</p>
+  
+       <button class="mood-trigger-btn" id="moodTriggerBtn">
+          <span id="currentMoodEmoji">🤍</span>
+          <span id="currentMoodText">Cuéntame...</span>
+       </button>
+
+<div class="mood-floating-bar" id="moodFloatingBar">
+    <button class="mood-fb-btn" data-emoji="😄" data-label="Feliz"><span>😄</span></button>
+    <button class="mood-fb-btn" data-emoji="😴" data-label="Cansado"><span>😴</span></button>
+    <button class="mood-fb-btn" data-emoji="🥺" data-label="Triste"><span>🥺</span></button>
+    <button class="mood-fb-btn" data-emoji="😍" data-label="Enamorado"><span>😍</span></button>
+    <button class="mood-fb-btn" data-emoji="🫩" data-label="Estresado"><span>🫩</span></button>
+    <button class="mood-fb-btn" data-emoji="😠" data-label="Enojado"><span>😠</span></button>
+  </div>
+
+  <p class="mood-partner" id="moodPartnerLine"></p>
+  <p class="mood-care-note" id="moodCareNote"></p>
+</div>
+
+        <span class="dash-restart-link" id="restartLink">◍ volver al inicio</span>
+      </div>
+
+      <!-- pestaña: recuerdos -->
+      <div class="dash-tab-panel" id="dash-tab-recuerdos">
+        <p class="dash-section-title">Recuerdos</p>
+
+        <div class="capsule-card" id="capsuleCard">
+          <div class="capsule-lock-icon" id="capsuleLockIcon">🔒</div>
+          <p class="capsule-title" id="capsuleTitle">Cápsula del Tiempo</p>
+          <p class="capsule-countdown" id="capsuleCountdown">Cargando…</p>
+          <div class="capsule-reveal" id="capsuleReveal" style="display:none;">
+            <img class="capsule-image" id="capsuleImage" style="display:none;">
+            <div class="capsule-text" id="capsuleText"></div>
+          </div>
+        </div>
+
+        <p class="dash-section-title" style="margin-top:22px;">Galería</p>
+        <div class="dash-placeholder-card">
+          📸 Galería en carrusel — próximamente.
+        </div>
+      </div>
+
+      <!-- pestaña: regalos -->
+      <div class="dash-tab-panel" id="dash-tab-regalos">
+        <p class="dash-section-title">Regalos &amp; Acciones</p>
+        <div class="coupon-carousel-wrap">
+          <div class="coupon-carousel" id="couponCarousel">
+            <p class="coupon-empty-msg">Cargando cupones…</p>
+          </div>
+          <div class="coupon-dots" id="couponDots"></div>
+        </div>
+        <div class="coupon-status-panel" id="couponStatusPanel" style="display:none;">
+          <div class="coupon-status-icon" id="couponStatusIcon">🎁</div>
+          <p class="coupon-status-title" id="couponStatusTitle">–</p>
+          <p class="coupon-status-text" id="couponStatusText">–</p>
+          <button class="coupon-ack-btn" id="couponAckBtn" title="Ya lo vi">✅</button>
+        </div>
+        <div class="quick-actions-grid">
+          <button class="quick-action-btn" id="btnDiario"><span class="qa-icon">📔</span>Mandar Mensaje</button>
+          <button class="quick-action-btn" id="btnAlbum"><span class="qa-icon">📸</span>Galería</button>
+          <button class="quick-action-btn" id="btnPoke"><span class="qa-icon">🥺</span>Te Extraño</button>
+        </div>
+      </div>
+
+      <nav class="bottom-nav">
+        <button class="bottom-nav-btn active" data-dashtab="home">🏠</button>
+        <button class="bottom-nav-btn" data-dashtab="recuerdos">🖼️</button>
+        <button class="bottom-nav-btn" data-dashtab="regalos">🎁</button>
+        <button class="bottom-nav-btn" id="notifBtn" title="Notificaciones">
+          🔔
+          <span class="notif-badge" id="notifBadge">0</span>
+        </button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ESCENA 6: MENSAJES DE NOSOTROS -->
+  <section id="scene-diario" class="scene">
+    <div class="starfield-static" id="starfieldDiario"></div>
+    <button class="back-btn" id="backFromDiario">←</button>
+    <div class="diario-box">
+      <p class="panel-title">Mensajes de nosotros</p>
+      <p class="panel-sub">Escribe algo bonito, quedará entre nosotros.</p>
+      <textarea id="diarioText" placeholder="Escribe aquí lo que quieras decirme..."></textarea>
+      <button class="action-btn" id="sendDiario">Enviar por WhatsApp</button>
+      <p class="panel-hint" id="diarioHint">Se abrirá WhatsApp con tu mensaje listo — solo debes presionar enviar.</p>
+    </div>
+  </section>
+
+  <!-- ESCENA 7: ÁLBUM DE FOTOS -->
+  <section id="scene-album" class="scene">
+    <div class="starfield-static" id="starfieldAlbum"></div>
+    <button class="back-btn" id="backFromAlbum">←</button>
+    <div class="album-box">
+      <p class="panel-title">Álbum de mejores fotos</p>
+      <p class="panel-sub">Elige tus fotos favoritas de nosotros.</p>
+      <label class="action-btn" for="photoInput">Elegir fotos</label>
+      <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
+      <div class="gallery" id="gallery"></div>
+      <button class="action-btn secondary" id="shareAlbum" style="display:none;">Compartir por WhatsApp</button>
+      <p class="panel-hint">Estas fotos quedan en tu dispositivo mientras ves esta página; si quieres que también me lleguen, compártelas por WhatsApp 💌</p>
+    </div>
+  </section>
+
+  <!-- ESCENA 8: NUESTRO BUZÓN -->
+  <section id="scene-buzon" class="scene">
+    <button class="back-btn" id="backFromBuzon">←</button>
+    <div class="buzon-wrap">
+      <div class="buzon-header">
+        <p class="buzon-title">Nuestro Buzón</p>
+        <button class="signature-btn" id="signatureBtn">✎ firma: <span id="currentSignatureLabel">–</span></button>
+      </div>
+      <div class="corkboard" id="corkboard">
+        <p class="corkboard-empty" id="corkboardEmpty">Aún no hay notitas — sé el primero en dejar una 💌</p>
+      </div>
+    </div>
+    <div class="buzon-actions-row">
+      <button class="add-note-btn" id="addNoteBtn">+ Añadir nota</button>
+      <button class="add-note-btn" id="newMailLetterBtn" style="background:linear-gradient(135deg,#8a5a34,#5c3a20);">✉️ Nueva carta</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ---------- MODAL: añadir nota ---------- -->
+<div class="note-modal-overlay" id="noteModalOverlay">
+  <div class="note-modal">
+    <p class="title">Nueva notita</p>
+    <textarea id="noteText" placeholder="Escribe algo bonito..."></textarea>
+    <p class="note-modal-sign">Se firmará como: <strong id="noteModalSignaturePreview">–</strong></p>
+    <div class="note-modal-actions">
+      <button class="action-btn secondary" id="cancelNoteBtn" style="margin:0;">Cancelar</button>
+      <button class="action-btn" id="pinNoteBtn" style="margin:0;">Pegar en el corcho</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- MODAL: configurar firma ---------- -->
+<div class="note-modal-overlay" id="signatureModalOverlay">
+  <div class="note-modal">
+    <p class="title">Tu firma</p>
+    <input type="text" id="signatureInput" maxlength="16" style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:'Quicksand',sans-serif;font-size:16px;outline:none;text-align:center;">
+    <div class="note-modal-actions">
+      <button class="action-btn secondary" id="cancelSignatureBtn" style="margin:0;">Cancelar</button>
+      <button class="action-btn" id="saveSignatureBtn" style="margin:0;">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- MODAL: confirmar canje de cupón ---------- -->
+<div class="note-modal-overlay" id="couponConfirmOverlay">
+  <div class="note-modal">
+    <p class="title">Canjear cupón</p>
+    <p style="color:rgba(255,255,255,0.7);font-size:.85rem;margin:0 0 6px;">¿Seguro que quieres canjear:</p>
+    <p id="couponConfirmTitle" style="color:var(--cloud-white);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.15rem;margin:0 0 16px;">–</p>
+    <div class="note-modal-actions">
+      <button class="action-btn secondary" id="couponConfirmCancel" style="margin:0;">Cancelar</button>
+      <button class="action-btn" id="couponConfirmYes" style="margin:0;">Sí, canjear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- NOTIFICACIONES: lista flotante efecto cristal/agua ---------- -->
+<div class="notif-overlay" id="notifOverlay">
+  <div class="notif-panel">
+    <div class="notif-panel-header">
+      <p class="notif-panel-title">Notificaciones</p>
+      <button class="notif-close-btn" id="notifCloseBtn">✕</button>
+    </div>
+    <div class="notif-list" id="notifList">
+      <p class="notif-empty">Aún no hay notificaciones 💭</p>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- MODAL: escribir carta (buzón mutuo) ---------- -->
+<div class="note-modal-overlay" id="mailEditorOverlay">
+  <div class="note-modal mail-editor-modal">
+    <p class="title">Editar carta</p>
+    <label>Dedicatoria</label>
+    <input type="text" id="mailEditDedication" placeholder="Mi amor">
+    <label>Fecha</label>
+    <input type="text" id="mailEditDate" placeholder="22 Jul 26">
+    <label>Contenido (deja una línea en blanco entre párrafos)</label>
+    <textarea id="mailEditBody" rows="8"></textarea>
+    <label>Posdata</label>
+    <textarea id="mailEditPs" rows="2"></textarea>
+    <label>Firma</label>
+    <input type="text" id="mailEditSignature" placeholder="Con amor">
+    <div class="note-modal-actions">
+      <button class="action-btn secondary" id="cancelMailEditorBtn" style="margin:0;">Cancelar</button>
+      <button class="action-btn" id="sendMailLetterBtn" style="margin:0;">Enviar +</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- CARTA RECIBIDA (buzón mutuo): mismo pergamino que la carta sorpresa ---------- -->
+<div class="letter-overlay" id="mailLetterOverlay">
+  <div class="letter-warning" id="mailLetterWarning">
+    <div class="letter-warning-icon">💌</div>
+    <p class="title">Tienes una carta nueva</p>
+    <p class="letter-warning-text">Solo se puede abrir una vez. En cuanto la termines de leer y toques "Leído", desaparecerá para siempre.</p>
+    <button class="action-btn" id="openMailLetterBtn">Abrir carta</button>
+  </div>
+
+  <div class="scroll-wrap" id="mailScrollWrap">
+    <div class="scroll-rod"></div>
+    <div class="scroll-paper" id="mailScrollPaper">
+      <p class="letter-meta" id="mailLetterMeta">Para: &nbsp;|&nbsp;</p>
+
+      <p class="spoiler-hint">toca para leer 💭</p>
+      <div class="spoiler-block" id="mailLetterSpoiler">
+        <div class="letter-body" id="mailLetterBody"></div>
+      </div>
+
+      <p class="letter-ps" id="mailLetterPs"></p>
+      <p class="letter-signature" id="mailLetterSignature"></p>
+
+      <button class="action-btn" id="mailLeidoBtn">Leído</button>
+    </div>
+    <div class="scroll-rod"></div>
+  </div>
+</div>
+
 <script>
-/* ============================================================
-   PERSONALIZA AQUÍ: pega los mismos 6 valores que usaste en
-   index.html (el firebaseConfig de tu proyecto de Firebase)
-   ============================================================ */
+/* ================================================================
+    JAVASCRIPT 
+   ================================================================ */
+  
+/* ---------- FIREBASE: registro de visitas y logins ---------- */
 const firebaseConfig = {
   apiKey: "AIzaSyDILhdyodCPTSUTQ7ikL5D36qEsSaeHPsU",
   authDomain: "para-ti-stats.firebaseapp.com",
@@ -588,566 +1856,1553 @@ const firebaseConfig = {
   appId: "1:676846376634:web:de7cc17182d0ea60611483"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
+let currentUserLabel = null; // se llena al iniciar sesión; queda vacío para la "visita" inicial porque aún no se sabe quién es
 
-const loginScreen = document.getElementById('loginScreen');
-const dashScreen = document.getElementById('dashScreen');
-const loadingMsg = document.getElementById('loadingMsg');
-
-const typeLabels = { visit: 'visita', login: 'login', letter_read: 'carta leída' };
-
-/* ------------------------------------------------------------
-   Estado en memoria
-   ------------------------------------------------------------ */
-let allEvents = [];            // [{id, type, date}], ordenado desc
-let eventsById = new Map();    // id -> item
-let favoriteIds = new Set();   // ids de eventos marcados como favoritos
-let currentCalDate = new Date();
-let selectedDay = null;
-
-/* ------------------------------------------------------------
-   Login / sesión
-   ------------------------------------------------------------ */
-document.getElementById('loginForm').addEventListener('submit', function(e){
-  e.preventDefault();
-  const email = document.getElementById('emailInput').value.trim();
-  const pass = document.getElementById('passInput').value;
-  const errorMsg = document.getElementById('errorMsg');
-  errorMsg.textContent = '';
-
-  auth.signInWithEmailAndPassword(email, pass).catch(() => {
-    errorMsg.textContent = 'Correo o contraseña incorrectos.';
-  });
-});
-
-auth.onAuthStateChanged(function(user){
-  if(user){
-    loginScreen.style.display = 'none';
-    dashScreen.style.display = 'flex';
-    loadStats();
-  } else {
-    loginScreen.style.display = 'flex';
-    dashScreen.style.display = 'none';
+function logEvent(type, extra){
+  const payload = {
+    type: type,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(currentUserLabel){
+    payload.user = currentUserLabel;
   }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
-
-/* ------------------------------------------------------------
-   NAVEGACIÓN: hub principal <-> secciones
-   ------------------------------------------------------------ */
-function showSection(name){
-  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
-  window.scrollTo(0, 0);
+  if(extra){
+    Object.assign(payload, extra);
+  }
+  db.collection('events').add(payload).catch(() => {});
 }
 
-document.querySelectorAll('.hub-card').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const section = btn.dataset.section;
-    showSection(section);
-    if(section === 'coupons') loadCouponsAdmin();
-    if(section === 'capsule') loadCapsuleAdmin();
+logEvent('visit'); // se registra sola cada vez que alguien abre la página
+
+/* ---------- CARTA SORPRESA: se muestra una vez, o cuando la vuelvan a activar desde stats ---------- */
+let letterListenerStarted = false;
+function checkLetter(){
+  if(letterListenerStarted) return; // ya está escuchando, no hace falta de nuevo
+  letterListenerStarted = true;
+  let firstSnapshot = true;
+
+  db.collection('letter').doc('trigger').onSnapshot((doc) => {
+    const resetAt = (doc.exists && doc.data().resetAt) ? doc.data().resetAt.toMillis() : 0;
+    const lastRead = localStorage.getItem('letterReadAt');
+    const lastReadMillis = lastRead ? new Date(lastRead).getTime() : 0;
+
+    let shouldShow;
+    if(firstSnapshot){
+      firstSnapshot = false;
+      // primer chequeo al iniciar sesión: solo si nunca la ha leído, o si Eber activó un "de nuevo" pendiente
+      shouldShow = (lastReadMillis === 0 || resetAt > lastReadMillis);
+    } else {
+      // a partir de aquí, queda escuchando en vivo: si Eber toca el botón mientras ella sigue en la app, aparece al instante
+      shouldShow = (resetAt > lastReadMillis);
+    }
+
+    if(shouldShow){
+      loadLetterContentAndShow();
+    }
   });
-});
-
-document.querySelectorAll('[data-back]').forEach(btn => {
-  btn.addEventListener('click', () => showSection('hub'));
-});
-
-/* ---------- VISTA PREVIA (100% local, no toca Firebase) ---------- */
-document.getElementById('previewLetterBtn').addEventListener('click', function(){
-  applyPreviewContent({
-    dedication: document.getElementById('editDedication').value,
-    date: document.getElementById('editDate').value,
-    body: document.getElementById('editBody').value,
-    ps: document.getElementById('editPs').value,
-    signature: document.getElementById('editSignature').value
-  });
-  document.getElementById('previewOverlay').classList.add('show');
-});
-
-function applyPreviewContent(data){
-  document.getElementById('previewMeta').innerHTML = `Para: ${data.dedication} &nbsp;|&nbsp; ${data.date}`;
-  const paragraphs = data.body.split('\n\n').map(p => p.trim()).filter(Boolean);
-  document.getElementById('previewBody').innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
-  document.getElementById('previewPs').textContent = data.ps;
-  document.getElementById('previewSignature').textContent = data.signature;
 }
-document.getElementById('previewCloseBtn').addEventListener('click', closePreview);
-document.getElementById('previewOpenBtn').addEventListener('click', function(){
-  document.getElementById('previewWarning').style.display = 'none';
-  const scroll = document.getElementById('previewScroll');
-  scroll.classList.add('show');
+
+function loadLetterContentAndShow(){
+  db.collection('letter').doc('content').get().then((doc) => {
+    if(doc.exists) applyLetterContent(doc.data());
+    showLetter();
+  }).catch(() => {
+    showLetter(); // si falla la conexión, se muestra igual con el texto que ya está guardado en la página
+  });
+}
+
+function applyLetterContent(data){
+  if(!data) return;
+  if(data.dedication !== undefined && data.date !== undefined){
+    document.getElementById('letterMeta').innerHTML = `Para: ${data.dedication} &nbsp;|&nbsp; ${data.date}`;
+  }
+  if(data.body){
+    const paragraphs = data.body.split('\n\n').map(p => p.trim()).filter(Boolean);
+    document.getElementById('letterBody').innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+  }
+  if(data.ps !== undefined){
+    document.getElementById('letterPs').textContent = data.ps;
+  }
+  if(data.signature !== undefined){
+    document.getElementById('letterSignature').textContent = data.signature;
+  }
+}
+
+function showLetter(){
+  document.getElementById('letterOverlay').classList.add('show');
+}
+
+document.getElementById('openLetterBtn').addEventListener('click', function(){
+  document.getElementById('letterWarning').style.display = 'none';
+  const scrollWrap = document.getElementById('scrollWrap');
+  scrollWrap.classList.add('show');
   requestAnimationFrame(() => {
-    document.getElementById('previewPaper').classList.add('unrolling');
+    document.getElementById('scrollPaper').classList.add('unrolling');
   });
 });
-document.getElementById('previewSpoiler').addEventListener('click', function(){
+
+document.getElementById('letterSpoiler').addEventListener('click', function(){
   this.classList.toggle('revealed');
 });
-document.getElementById('previewLeidoBtn').addEventListener('click', closePreview);
 
-function closePreview(){
-  document.getElementById('previewOverlay').classList.remove('show');
-  document.getElementById('previewWarning').style.display = '';
-  document.getElementById('previewScroll').classList.remove('show');
-  document.getElementById('previewPaper').classList.remove('unrolling');
-  document.getElementById('previewSpoiler').classList.remove('revealed');
+document.getElementById('leidoBtn').addEventListener('click', function(){
+  const now = new Date().toISOString();
+  localStorage.setItem('letterReadAt', now);
+  logEvent('letter_read');
+  document.getElementById('letterOverlay').classList.remove('show');
+});
+
+/* ============================================================
+   LOGGING / CUENTAS ...
+   ============================================================ */
+const ACCOUNTS = [
+  { userHash: "30d425858b2467d1f74251cc9e5dcc69a57009a669856a4ca8bb76a5a58f7e09", passHash: "40eb73726b0999f8954918c9c7b0d9a1c7432406c3a761c7c9d34fa2908fcd7a", label: "Mor" },
+  { userHash: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", passHash: "23aef111e0797c2215224bb1876376e008ba86838124ac9e45e48d81e6d74335", label: "Admin" }
+];
+
+async function sha256(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-document.getElementById('resetLetterBtn').addEventListener('click', function(){
-  const btn = this;
-  db.collection('letter').doc('trigger').set({
-    resetAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    const original = btn.textContent;
-    btn.textContent = '💌 Enviado';
-    setTimeout(() => { btn.textContent = original; }, 2000);
-    setTimeout(renderLetterStatus, 1200); // le da un momento a que el servidor confirme la hora
-  }).catch(() => {
-    btn.textContent = 'No se pudo, revisa tu conexión';
+/* ============================================================
+   NUMBER PHONE SHARE
+   ============================================================ */
+const WHATSAPP_NUMBER = "522721498675";
+/* ============================================================ */
+
+/* ============================================================
+    UPDATES MESSAGES
+   ============================================================ */
+const APP_VERSION = "2026-07-19-28";
+
+(function checkForUpdate(){
+  const overlay = document.getElementById('updateOverlay');
+  const prevVersion = localStorage.getItem('para_ti_version');
+
+  if(prevVersion === null){
+    // primera vez que abre la página: no es una "actualización", solo entra directo
+    localStorage.setItem('para_ti_version', APP_VERSION);
+    overlay.classList.add('hide');
+  } else if(prevVersion !== APP_VERSION){
+    // sí hay una versión nueva:
+    localStorage.setItem('para_ti_version', APP_VERSION);
+    setTimeout(() => overlay.classList.add('hide'), 20000);
+  } else {
+    // misma versión de siempre: nada que avisar
+    overlay.classList.add('hide');
+  }
+})();
+
+(function daysTogether(){
+  const start = new Date('2026-04-28T00:00:00');
+  const now = new Date();
+  const days = Math.max(0, Math.floor((now - start) / 86400000));
+  document.getElementById('daysWidgetNum').textContent = days;
+})();
+
+/* ---------- PERSONALIZACIÓN: tema claro/oscuro y color del año ---------- */
+function applyTheme(theme){
+  document.body.classList.toggle('theme-light', theme === 'light');
+  const icon = document.getElementById('themeSwitchIcon');
+  if(icon) icon.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+const ACCENT_GRADIENTS = {
+  '': 'linear-gradient(135deg,#ff7ab0,#b199ff)',
+  verde: 'linear-gradient(135deg,#5fd48a,#2f9e63)',
+  azul: 'linear-gradient(135deg,#6fb8ff,#3f7fd6)',
+  rojo: 'linear-gradient(135deg,#ff6f7a,#e6355f)',
+  dorado: 'linear-gradient(135deg,#ffcf7a,#e0a13a)',
+  rosa: 'linear-gradient(135deg,#ff8ad1,#d874e0)'
+};
+function applyAccent(accent){
+  if(accent){ document.body.setAttribute('data-accent', accent); }
+  else { document.body.removeAttribute('data-accent'); }
+  document.querySelectorAll('.accent-swatch').forEach(sw => {
+    sw.classList.toggle('selected', (sw.dataset.accent || '') === (accent || ''));
+  });
+  const trigger = document.getElementById('accentTriggerBtn');
+  if(trigger) trigger.style.background = ACCENT_GRADIENTS[accent || ''];
+}
+
+applyTheme(localStorage.getItem('para_ti_theme') || 'dark');
+applyAccent(localStorage.getItem('para_ti_accent') || '');
+
+document.getElementById('hamburgerBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  document.getElementById('liquidSidePanel').classList.toggle('show');
+  document.getElementById('liquidPanelBackdrop').classList.toggle('show');
+});
+document.getElementById('liquidPanelBackdrop').addEventListener('click', function(){
+  document.getElementById('liquidSidePanel').classList.remove('show');
+  document.getElementById('liquidPanelBackdrop').classList.remove('show');
+  document.getElementById('accentSwatchesList').classList.remove('show');
+});
+document.getElementById('themeSwitch').addEventListener('click', function(){
+  const next = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+  applyTheme(next);
+  localStorage.setItem('para_ti_theme', next);
+});
+document.getElementById('accentTriggerBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  document.getElementById('accentSwatchesList').classList.toggle('show');
+});
+document.querySelectorAll('.accent-swatch').forEach(sw => {
+  sw.addEventListener('click', function(){
+    const accent = this.dataset.accent || '';
+    applyAccent(accent);
+    localStorage.setItem('para_ti_accent', accent);
+    document.getElementById('accentSwatchesList').classList.remove('show');
   });
 });
-document.getElementById('refreshBtn').addEventListener('click', loadStats);
 
-/* ------------------------------------------------------------
-   Pestañas (Reciente / Calendario / Favoritos)
-   ------------------------------------------------------------ */
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-  });
-});
+/* partículas suaves y minimalistas del Dashboard, coloreadas según el color del año elegido */
+function buildAccentParticles(){
+  const container = document.getElementById('accentParticles');
+  if(!container || container.childElementCount) return; // solo se arma una vez
+  const count = 14;
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className = 'accent-particle';
+    const size = 6 + Math.random()*14;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left = Math.random()*100 + '%';
+    p.style.setProperty('--drift', (Math.random()*60 - 30) + 'px');
+    p.style.animationDuration = (14 + Math.random()*10) + 's';
+    p.style.animationDelay = '-' + (Math.random()*20) + 's';
+    container.appendChild(p);
+  }
+}
 
-/* ------------------------------------------------------------
-   Carga de datos (eventos + favoritos)
-   ------------------------------------------------------------ */
-function loadStats(){
-  loadingMsg.style.display = 'block';
-  loadingMsg.textContent = 'Cargando...';
+const scenes = {
+  login: document.getElementById('scene-login'),
+  universe: document.getElementById('scene-universe'),
+  final: document.getElementById('scene-final'),
+  dashboard: document.getElementById('scene-dashboard'),
+  diario: document.getElementById('scene-diario'),
+  album: document.getElementById('scene-album'),
+  buzon: document.getElementById('scene-buzon'),
+};
 
-  const eventsPromise = db.collection('events').orderBy('timestamp', 'desc').get();
-  // Si la colección "favorites" aún no tiene reglas o falla por otro motivo,
-  // seguimos mostrando la actividad normal en vez de romper todo el panel.
-  const favoritesPromise = db.collection('favorites').get().catch(() => null);
+function goTo(name){
+  Object.values(scenes).forEach(s => s.classList.remove('active'));
+  scenes[name].classList.add('active');
+}
 
-  Promise.all([eventsPromise, favoritesPromise]).then(([eventsSnap, favSnap]) => {
-    allEvents = [];
-    eventsById = new Map();
-    favoriteIds = new Set();
+/* ---------- LOGIN ---------- */
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const user = document.getElementById('userInput').value.trim().toLowerCase();
+  const pass = document.getElementById('passInput').value;
+  const card = this;
+  const error = document.getElementById('loginError');
 
-    if(favSnap){
-      favSnap.forEach(doc => favoriteIds.add(doc.id));
+  const userHash = await sha256(user);
+  const passHash = await sha256(pass);
+  const match = ACCOUNTS.find(acc => acc.userHash === userHash && acc.passHash === passHash);
+
+  if(match){
+    currentUserLabel = match.label;
+    goTo('universe');
+    initUniverseStars();
+    document.getElementById('loginBgVideo').pause(); // el video deja de reproducirse al pasar a la siguiente ventana
+    logEvent('login');
+    if(currentUserLabel === 'Mor'){
+      checkLetter(); // la carta sorpresa original solo se revisa/aparece para ella, nunca con la cuenta admin
     }
+    startMailLetterListener(); // el buzón de cartas mutuas sí aplica para ambas cuentas
+    document.getElementById('bgMusic').play().catch(() => {});
+  } else {
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    error.classList.add('show');
+  }
+});
 
-    let visits = 0, logins = 0, letterReads = 0;
-    eventsSnap.forEach((doc) => {
-      const data = doc.data();
-      const date = data.timestamp ? data.timestamp.toDate() : new Date();
-      const item = { id: doc.id, type: data.type, date, user: data.user };
-      allEvents.push(item);
-      eventsById.set(doc.id, item);
+/* pequeñas estrellas decorativas de fondo en el login */
+  (function greetingAndQuote(){
+  const hour = new Date().getHours();
+  let greeting;
+  if(hour >= 5 && hour < 12){
+    greeting = "Buenos días mor ☀️💛";
+  } else if(hour >= 12 && hour < 19){
+    greeting = "Tarde de pensarte 😘🧡";
+  } else {
+    greeting = "Vamos a dormir mi vida ❤️🌙";
+  }
+  document.getElementById('loginGreeting').textContent = greeting;
 
-      if(data.type === 'visit') visits++;
-      if(data.type === 'login') logins++;
-      if(data.type === 'letter_read') letterReads++;
+  const quotes = [
+    "Báñate morcito 🫣",
+    "Te quiero morder un pie 👣",
+    "Mi corazón es tuyo ♥️",
+    "Quería recordarte que me encantas",
+    "Me gustas despeinada",
+    "Contigo hasta el fin del universo 🌌",
+    "Eres mi lugar favorito 💫",
+    "Eternamente Nosostros",
+    "Aun me amas?",
+    "Sonríe, alguien te ama mucho 😊",
+    "Me encanta como te ves hoy 🔥",
+    "Quiza estoy cerca de ti 🫣",
+    "Que lindos Ojos ♥️",
+    "Hueles a hogar 🤍"
+  ];
+  document.getElementById('loginQuote').textContent = quotes[Math.floor(Math.random()*quotes.length)];
+})();
+/* video de fondo del login: Mañana / Tarde / Noche, según la hora actual, en bucle */
+(function loginBackgroundVideo(){
+  const hour = new Date().getHours();
+  let file;
+  if(hour >= 5 && hour < 12){
+    file = 'Manana.mp4';
+  } else if(hour >= 12 && hour < 19){
+    file = 'Tarde.mp4';
+  } else {
+    file = 'Noche.mp4';
+  }
+  const video = document.getElementById('loginBgVideo');
+  video.src = encodeURI(file);
+  video.play().catch(() => {}); // algunos navegadores requieren interacción; con muted+playsinline debería reproducir solo
+})();
+
+
+function buildWarpField(container){
+  container.innerHTML = '';
+  const configs = [
+    {count:120, size:'1px', duration:7},
+    {count:70,  size:'2px', duration:10},
+    {count:35,  size:'3px', duration:13},
+  ];
+  configs.forEach((cfg, idx) => {
+    const layer = document.createElement('div');
+    layer.className = 'warp-layer';
+    let shadows = [];
+    for(let i=0;i<cfg.count;i++){
+      const angle = Math.random()*Math.PI*2;
+      const dist = Math.random()*600 + 40;
+      const x = Math.round(Math.cos(angle)*dist);
+      const y = Math.round(Math.sin(angle)*dist);
+      shadows.push(`${x}px ${y}px 0 var(--star-white)`);
+    }
+    layer.style.width = cfg.size;
+    layer.style.height = cfg.size;
+    layer.style.boxShadow = shadows.join(',');
+    layer.style.animationDuration = cfg.duration + 's';
+    layer.style.animationDelay = '-' + (Math.random()*cfg.duration) + 's';
+    container.appendChild(layer);
+  });
+}
+buildWarpField(document.getElementById('starfieldFinal'));
+
+/* estrellas interactivas: hover -> TE AMO */
+let hoverStarsInitialized = false;
+function initUniverseStars(){
+  const container = document.getElementById('starfieldUniverse');
+  buildWarpField(container);
+
+  if(hoverStarsInitialized) return;
+  hoverStarsInitialized = true;
+
+  const starCount = 32;
+  let hoveredCount = 0;
+  const seen = new Set();
+
+  for(let i=0;i<starCount;i++){
+    const star = document.createElement('span');
+    star.className = 'hover-star';
+    const top = 8 + Math.random()*78;
+    const left = 4 + Math.random()*92;
+    star.style.top = top + '%';
+    star.style.left = left + '%';
+    star.style.animationDuration = (2 + Math.random()*3) + 's';
+    star.style.animationDelay = '-' + (Math.random()*4) + 's';
+
+    star.addEventListener('mouseenter', function(){
+      const pop = document.createElement('span');
+      pop.className = 'love-pop';
+      pop.textContent = 'TE AMO';
+      pop.style.top = top + '%';
+      pop.style.left = left + '%';
+      container.appendChild(pop);
+      requestAnimationFrame(() => pop.classList.add('show'));
+      setTimeout(() => {
+        pop.classList.remove('show');
+        setTimeout(() => pop.remove(), 500);
+      }, 1000);
+
+      if(!seen.has(i)){
+        seen.add(i);
+        hoveredCount++;
+        if(hoveredCount >= 4){
+          document.getElementById('continueBtn').classList.add('show');
+        }
+      }
     });
 
-    document.getElementById('visitCount').textContent = visits;
-    document.getElementById('loginCount').textContent = logins;
-    document.getElementById('letterCount').textContent = letterReads;
+    container.appendChild(star);
+  }
 
-    renderRecentActivity();
-    renderCalendar();
-    renderFavorites();
-    renderLetterStatus();
-    loadLetterEditor();
+  setTimeout(() => {
+    document.getElementById('continueBtn').classList.add('show');
+  }, 6000);
+}
 
-    loadingMsg.style.display = 'none';
-  }).catch(() => {
-    loadingMsg.textContent = 'No se pudo cargar. Revisa tu conexión.';
+/* ---------- TAMAGOTCHI: maceta de lavanda compartida ---------- */
+/* ---------- TAMAGOTCHI: maceta de lavanda compartida (21 DÍAS) ---------- */
+const PLANT_STAGES = [
+  // FASE 1: Semilla a Brote (Días 0 al 4)
+  { stem: 4,  scale: 0.4, leafScale: 0.0, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 0
+  { stem: 6,  scale: 0.5, leafScale: 0.2, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 1
+  { stem: 8,  scale: 0.5, leafScale: 0.4, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 2
+  { stem: 10, scale: 0.6, leafScale: 0.6, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 3
+  { stem: 12, scale: 0.6, leafScale: 0.8, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 4
+
+  // FASE 2: Tallo con hojitas creciendo (Días 5 al 9)
+  { stem: 16, scale: 0.7, leafScale: 1.0, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 5
+  { stem: 20, scale: 0.7, leafScale: 1.2, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 6
+  { stem: 24, scale: 0.8, leafScale: 1.4, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 7
+  { stem: 28, scale: 0.8, leafScale: 1.6, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 8
+  { stem: 32, scale: 0.9, leafScale: 1.8, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 9
+
+  // FASE 3: Planta madura (Días 10 al 14)
+  { stem: 36, scale: 1.0, leafScale: 2.0, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 10
+  { stem: 38, scale: 1.0, leafScale: 2.2, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 11
+  { stem: 40, scale: 1.1, leafScale: 2.4, fSize: 0,   fOp: 0,   color: '#4f6b45', glow: 0 }, // Día 12
+  { stem: 42, scale: 1.1, leafScale: 2.6, fSize: 0.3, fOp: 0.5, color: '#688e5b', glow: 0 }, // Día 13 (Nace capullo verde)
+  { stem: 44, scale: 1.2, leafScale: 2.8, fSize: 0.5, fOp: 0.8, color: '#8d9c7c', glow: 0 }, // Día 14 (Capullo cambia de color)
+
+  // FASE 4: Lavanda floreciendo (Días 15 al 21)
+  { stem: 46, scale: 1.2, leafScale: 3.0, fSize: 0.6, fOp: 1,   color: '#9a81cc', glow: 2 }, // Día 15 (Morado oscuro)
+  { stem: 47, scale: 1.3, leafScale: 3.1, fSize: 0.7, fOp: 1,   color: '#a990e5', glow: 4 }, // Día 16
+  { stem: 48, scale: 1.3, leafScale: 3.2, fSize: 0.8, fOp: 1,   color: '#b199ff', glow: 6 }, // Día 17
+  { stem: 49, scale: 1.4, leafScale: 3.3, fSize: 0.9, fOp: 1,   color: '#b199ff', glow: 8 }, // Día 18
+  { stem: 50, scale: 1.4, leafScale: 3.4, fSize: 1.0, fOp: 1,   color: '#c5b3ff', glow: 12 },// Día 19
+  { stem: 50, scale: 1.5, leafScale: 3.5, fSize: 1.1, fOp: 1,   color: '#d9c3ff', glow: 16 },// Día 20
+  { stem: 50, scale: 1.5, leafScale: 3.5, fSize: 1.2, fOp: 1,   color: '#d9c3ff', glow: 22 } // Día 21 (Lavanda radiante)
+];
+const MAX_PLANT_STAGE = PLANT_STAGES.length - 1;
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function daysBetweenStr(a, b){
+  return Math.round((new Date(b) - new Date(a)) / 86400000);
+}
+
+function renderPlant(state){
+  const stageIdx = Math.min(Math.max(state.growthStage || 0, 0), MAX_PLANT_STAGE);
+  const cfg = PLANT_STAGES[stageIdx];
+  
+  const stem = document.getElementById('plantStem');
+  const scaleWrap = document.getElementById('plantFlowerScale');
+  const cluster = document.getElementById('plantCluster');
+  
+  // Aplicamos las nuevas variables CSS dinámicas a los elementos
+  if(scaleWrap) scaleWrap.style.setProperty('--fscale', cfg.scale);
+  if(stem) {
+    stem.style.setProperty('--stem-h', cfg.stem + 'px');
+    stem.style.setProperty('--leaf-scale', cfg.leafScale);
+  }
+  if(cluster) {
+    cluster.style.setProperty('--flower-size', cfg.fSize);
+    cluster.style.setProperty('--flower-opacity', cfg.fOp);
+    cluster.style.setProperty('--bud-color', cfg.color);
+    cluster.style.filter = cfg.glow ? `drop-shadow(0 0 ${cfg.glow}px var(--pink-glow)) brightness(1.15)` : 'none';
+  }
+  
+  const streak = state.streak || 0;
+  document.getElementById('plantStreak').textContent = `🔥 ${streak} día${streak === 1 ? '' : 's'} de racha`;
+}
+
+function loadPlant(){
+  db.collection('plant').doc('state').get().then(doc => {
+    let state = doc.exists ? doc.data() : { growthStage:0, streak:0, lastWatered:{}, lastStreakDate:null };
+    state.lastWatered = state.lastWatered || {};
+
+    // si pasó más de un día desde el último riego doble, la racha se corta y la planta se marchita un poco
+    if(state.lastStreakDate && (state.streak || 0) > 0){
+      const gap = daysBetweenStr(state.lastStreakDate, todayStr());
+      if(gap > 1){
+        state.streak = 0;
+        state.growthStage = Math.max(0, (state.growthStage || 0) - 1);
+        db.collection('plant').doc('state').set(state, {merge:true}).catch(() => {});
+      }
+    }
+    renderPlant(state);
+  }).catch(() => {});
+}
+
+function spawnWaterDrops(){
+  const pot = document.getElementById('plantPot');
+  for(let i=0;i<5;i++){
+    const drop = document.createElement('span');
+    drop.className = 'watering-drop';
+    drop.textContent = '💧';
+    drop.style.left = (30 + Math.random()*40) + '%';
+    drop.style.animationDelay = (i*0.08) + 's';
+    pot.appendChild(drop);
+    setTimeout(() => drop.remove(), 1000);
+  }
+}
+
+document.getElementById('waterBtn').addEventListener('click', function(){
+  const msg = document.getElementById('plantMsg');
+  if(!currentUserLabel) return;
+  const key = currentUserLabel.toLowerCase();
+  const today = todayStr();
+
+  db.collection('plant').doc('state').get().then(doc => {
+    let state = doc.exists ? doc.data() : { growthStage:0, streak:0, lastWatered:{}, lastStreakDate:null };
+    state.lastWatered = state.lastWatered || {};
+
+    if(state.lastWatered[key] === today){
+      msg.textContent = 'Vuelve mañana 💜';
+      return;
+    }
+    state.lastWatered[key] = today;
+    const otherKey = key === 'admin' ? 'mor' : 'admin';
+    const bothToday = state.lastWatered[otherKey] === today;
+
+    if(bothToday && state.lastStreakDate !== today){
+      state.streak = (state.streak || 0) + 1;
+      state.growthStage = Math.min(MAX_PLANT_STAGE, (state.growthStage || 0) + 1);
+      state.lastStreakDate = today;
+      msg.textContent = `¡Los dos dieron amor hoy! 🌱 Racha: ${state.streak} día${state.streak === 1 ? '' : 's'}`;
+    } else if(bothToday){
+      msg.textContent = '¡Gracias por darle amor! 💧';
+    } else {
+      // AQUÍ ESTÁ LA MAGIA: 
+      // Evaluamos el ID interno para decidir qué nombre bonito mostrar
+      const nombreFaltante = otherKey === 'admin' ? 'Oliver' : 'Love';
+      msg.textContent = `Falta que ${nombreFaltante} le de amor hoy 🌷`;
+    }
+
+    db.collection('plant').doc('state').set(state, {merge:true}).then(() => {
+      renderPlant(state);
+      const stage = document.getElementById('plantStage');
+      stage.classList.remove('plant-bump'); void stage.offsetWidth; stage.classList.add('plant-bump');
+      spawnWaterDrops();
+      logEvent('water_plant');
+      createNotification('plant_love');
+    });
+  }).catch(() => { msg.textContent = 'No se pudo regar, revisa tu conexión.'; });
+});
+
+/* ============================================================
+   NOTIFICACIONES: nota nueva, like, amor a la plantita,
+   mood tracker y cápsula del tiempo — individuales por usuario
+   ============================================================ */
+function myKeyNow(){
+  return currentUserLabel ? currentUserLabel.toLowerCase() : null;
+}
+function otherKeyOf(key){
+  return key === 'admin' ? 'mor' : 'admin';
+}
+function displayNameFor(key){
+  return key === 'admin' ? 'Oliver' : 'Love';
+}
+
+function createNotification(type, meta){
+  const myKey = myKeyNow();
+  if(!myKey) return;
+  db.collection('notifications').add({
+    type: type,
+    actorKey: myKey,
+    recipientKey: otherKeyOf(myKey),
+    meta: meta || {},
+    read: false,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(err => {
+    console.error('No se pudo crear la notificación (revisa las reglas de Firestore para la colección "notifications"):', err);
   });
 }
 
-/* ------------------------------------------------------------
-   Construcción de filas de actividad (compartida entre pestañas)
-   ------------------------------------------------------------ */
-function buildActivityItemHTML(item){
-  const dateStr = item.date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-  const isFav = favoriteIds.has(item.id);
-  const userBadge = item.user ? `<span class="user-badge ${item.user}">${item.user} ⭐</span>` : '';
-  return `<li class="activity-item" data-id="${item.id}">
-      <div class="activity-item-main">
-        <span>${dateStr}</span>
-        <span class="tag ${item.type}">${typeLabels[item.type] || item.type}</span>
-        ${userBadge}
-      </div>
-      <button class="star-btn ${isFav ? 'starred' : ''}" data-id="${item.id}" title="${isFav ? 'Quitar de favoritos' : 'Guardar como favorito'}">★</button>
-    </li>`;
+function notifIconFor(type){
+  switch(type){
+    case 'note_new': return '💌';
+    case 'note_like': return '❤️';
+    case 'plant_love': return '🌱';
+    case 'mood': return '💭';
+    case 'capsule_new': return '⏳';
+    case 'letter_new': return '📜';
+    default: return '🔔';
+  }
+}
+function notifTextFor(item){
+  const actor = displayNameFor(item.actorKey);
+  const meta = item.meta || {};
+  switch(item.type){
+    case 'note_new': return `${actor} te dejó una nueva nota`;
+    case 'note_like': return `${actor} le dio like a tu nota`;
+    case 'plant_love': return `${actor} le dio amor a la plantita`;
+    case 'mood': return `${actor} se siente hoy: ${meta.emoji || ''} ${meta.label || ''}`.trim();
+    case 'capsule_new': return `${actor} agregó una nueva cápsula de tiempo`;
+    case 'letter_new': return `${actor} te mandó una carta 💌`;
+    default: return `${actor} hizo algo nuevo`;
+  }
+}
+function formatRelativeTime(date){
+  const diffMs = Date.now() - date.getTime();
+  const min = Math.round(diffMs / 60000);
+  if(min < 1) return 'ahora mismo';
+  if(min < 60) return `hace ${min} min`;
+  const hrs = Math.round(min / 60);
+  if(hrs < 24) return `hace ${hrs} h`;
+  const days = Math.round(hrs / 24);
+  if(days < 7) return `hace ${days} d`;
+  return date.toLocaleDateString('es-MX', {day:'numeric', month:'short'});
 }
 
-function renderRecentActivity(){
-  const list = document.getElementById('activityList');
-  const recent = allEvents.slice(0, 15);
-  list.innerHTML = recent.length
-    ? recent.map(buildActivityItemHTML).join('')
-    : '<li class="empty-msg">Todavía no hay actividad registrada</li>';
-}
+let notifItems = [];
+let notificationsListenerStarted = false;
 
-/* ------------------------------------------------------------
-   Calendario mensual
-   ------------------------------------------------------------ */
-const calMonthLabel = document.getElementById('calMonthLabel');
-const calGrid = document.getElementById('calGrid');
-const calDayTitle = document.getElementById('calDayTitle');
-const calDayList = document.getElementById('calDayList');
+function renderNotifications(){
+  const list = document.getElementById('notifList');
+  const badge = document.getElementById('notifBadge');
+  if(!list || !badge) return;
 
-function renderCalendar(){
-  const year = currentCalDate.getFullYear();
-  const month = currentCalDate.getMonth();
-
-  calMonthLabel.textContent = currentCalDate.toLocaleString('es-MX', {month:'long', year:'numeric'});
-
-  const firstDay = new Date(year, month, 1);
-  const startOffset = firstDay.getDay(); // 0 = domingo
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const dayHasEvents = new Set();
-  allEvents.forEach(ev => {
-    if(ev.date.getFullYear() === year && ev.date.getMonth() === month){
-      dayHasEvents.add(ev.date.getDate());
-    }
-  });
-
-  const today = new Date();
-  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
-
-  const dows = ['D','L','M','M','J','V','S'];
-  let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
-
-  for(let i = 0; i < startOffset; i++){
-    html += '<div class="cal-day empty"></div>';
+  const unreadCount = notifItems.filter(n => !n.read).length;
+  if(unreadCount > 0){
+    badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
   }
 
-  for(let d = 1; d <= daysInMonth; d++){
-    const classes = ['cal-day'];
-    if(dayHasEvents.has(d)) classes.push('has-events');
-    if(isCurrentMonth && d === today.getDate()) classes.push('today');
-    if(selectedDay && selectedDay.getFullYear() === year && selectedDay.getMonth() === month && selectedDay.getDate() === d){
-      classes.push('selected');
-    }
-    html += `<div class="${classes.join(' ')}" data-day="${d}">${d}</div>`;
-  }
-
-  calGrid.innerHTML = html;
-  renderCalendarDetail();
-}
-
-function renderCalendarDetail(){
-  if(!selectedDay){
-    calDayTitle.textContent = 'Selecciona un día para ver su actividad';
-    calDayList.innerHTML = '';
+  if(!notifItems.length){
+    list.innerHTML = '<p class="notif-empty">Aún no hay notificaciones 💭</p>';
     return;
   }
-  const dayItems = allEvents.filter(ev =>
-    ev.date.getFullYear() === selectedDay.getFullYear() &&
-    ev.date.getMonth() === selectedDay.getMonth() &&
-    ev.date.getDate() === selectedDay.getDate()
-  );
-  const dayLabel = selectedDay.toLocaleString('es-MX', {day:'numeric', month:'long', year:'numeric'});
-  calDayTitle.textContent = `${dayLabel} · ${dayItems.length} registro${dayItems.length === 1 ? '' : 's'}`;
-  calDayList.innerHTML = dayItems.length
-    ? dayItems.map(buildActivityItemHTML).join('')
-    : '<li class="empty-msg">Sin registros ese día</li>';
+
+  list.innerHTML = notifItems.map(item => {
+    const date = item.timestamp ? item.timestamp.toDate() : new Date();
+    return `
+      <div class="notif-item ${item.read ? '' : 'unread'}">
+        <div class="notif-icon">${notifIconFor(item.type)}</div>
+        <div class="notif-body">
+          <p class="notif-text">${notifTextFor(item)}</p>
+          <p class="notif-time">${formatRelativeTime(date)}</p>
+        </div>
+      </div>`;
+  }).join('');
 }
 
-calGrid.addEventListener('click', (e) => {
-  const cell = e.target.closest('.cal-day');
-  if(!cell || cell.classList.contains('empty')) return;
-  const day = parseInt(cell.dataset.day, 10);
-  selectedDay = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth(), day);
-  renderCalendar();
-});
-
-document.getElementById('calPrevBtn').addEventListener('click', () => {
-  currentCalDate = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() - 1, 1);
-  selectedDay = null;
-  renderCalendar();
-});
-document.getElementById('calNextBtn').addEventListener('click', () => {
-  currentCalDate = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() + 1, 1);
-  selectedDay = null;
-  renderCalendar();
-});
-
-/* ------------------------------------------------------------
-   Estado + editor de la carta
-   ------------------------------------------------------------ */
-function renderLetterStatus(){
-  const box = document.getElementById('letterStatus');
-  box.textContent = 'Revisando estado...';
-
-  db.collection('letter').doc('trigger').get().then((triggerDoc) => {
-    const resetAt = (triggerDoc.exists && triggerDoc.data().resetAt) ? triggerDoc.data().resetAt.toMillis() : 0;
-    const read = allEvents.find(ev => ev.type === 'letter_read');
-    const readMillis = read ? read.date.getTime() : 0;
-
-    if(readMillis > 0 && readMillis >= resetAt){
-      const dateStr = read.date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-      box.textContent = `✅ La leyó ${dateStr}`;
-    } else if(resetAt > 0){
-      const dateStr = new Date(resetAt).toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-      box.textContent = `⏳ Se la mostraste de nuevo el ${dateStr} — todavía no la ha abierto`;
-    } else {
-      box.textContent = '⏳ Aún no la ha leído';
-    }
-  }).catch(() => {
-    box.textContent = 'No se pudo revisar el estado, actualiza la página.';
-  });
-}
-
-/* ---------- EDITOR DE LA CARTA ---------- */
-let editorLoaded = false; // solo se carga una vez, para no borrar lo que estés escribiendo si le das "Actualizar"
-function loadLetterEditor(){
-  if(editorLoaded) return;
-  db.collection('letter').doc('content').get().then((doc) => {
-    editorLoaded = true;
-    if(doc.exists){
-      const d = doc.data();
-      document.getElementById('editDedication').value = d.dedication || '';
-      document.getElementById('editDate').value = d.date || '';
-      document.getElementById('editBody').value = d.body || '';
-      document.getElementById('editPs').value = d.ps || '';
-      document.getElementById('editSignature').value = d.signature || '';
-    } else {
-      // primera vez: no hay nada guardado todavía, se precarga con el texto original
-      document.getElementById('editDedication').value = 'Mi futura esposa.';
-      document.getElementById('editDate').value = '15 Jul 26';
-      document.getElementById('editBody').value =
-`Mor, quiero aprovechar q estás durmiendo aquí, encima de mí, para escribirte algunas cosas q siento.
-
-Me gustas mucho.
-
-Desde aquel primer mensaje q me mandaste pidiendo la tarea ya sentía una chispa dentro de mí, y lo confirmé cuando te vi por primera vez.
-
-Pude notar en tus bonitos ojos q algo más vendría para nosotros.
-
-Sé q el camino no es ni ah sido para nada fácil, pero me doy cuenta de q ambos seguimos aquí, juntos, y eso me hace muy feliz.
-
-Me gusta mucho tu cuerpo, y no solo en lo sexual; me encanta tu olor y cómo se siente tu cuerpo pegadito al mío.
-
-Me gustas muchísimo, mor.
-
-Me encantan tus ojos, tu sonrisa y esa carita que pones cuando quieres algo, jjsjs traviesilla...
-
-Me gusta hasta cuando te enojas y haces berrinche, o cuando me alimentas, porque no solo llenas mi pancita, también alimentas mi alma.
-
-Me gusta caminar de la mano contigo sin importar nada más.
-
-Me encanta cuando hago cualquier cosita no sé qué sea, que te gusta y me regalas esa sonrisa de enamorada.
-
-Simplemente te amo demasiado mujer mía.`;
-      document.getElementById('editPs').value = 'Pd: quiero q sepas q mi deseo es avivar la chispa todos los días contigo. Estoy aquí para buscar aligerar tus días, cuidar nuestra magia y hacerte feliz lo más q pueda ✨♥️🌙';
-      document.getElementById('editSignature').value = 'Con amor, E.C.';
-    }
-  }).catch(() => {
-    document.getElementById('saveMsg').textContent = 'No se pudo cargar el editor, revisa tu conexión.';
-  });
-}
-
-document.getElementById('saveLetterBtn').addEventListener('click', function(){
-  const saveMsg = document.getElementById('saveMsg');
-  const data = {
-    dedication: document.getElementById('editDedication').value,
-    date: document.getElementById('editDate').value,
-    body: document.getElementById('editBody').value,
-    ps: document.getElementById('editPs').value,
-    signature: document.getElementById('editSignature').value
-  };
-  db.collection('letter').doc('content').set(data).then(() => {
-    saveMsg.textContent = '✅ Guardado ';
-  }).catch(() => {
-    saveMsg.textContent = 'No se pudo guardar, revisa tu conexión.';
-  });
-});
-
-/* ------------------------------------------------------------
-   Favoritos
-   ------------------------------------------------------------ */
-function renderFavorites(){
-  const favList = document.getElementById('favoritesList');
-  const favItems = allEvents.filter(ev => favoriteIds.has(ev.id));
-  favList.innerHTML = favItems.length
-    ? favItems.map(buildActivityItemHTML).join('')
-    : '<li class="empty-msg">Aún no tienes favoritos. Toca la ⭐ en un registro para guardarlo aquí.</li>';
-}
-
-function toggleFavorite(item){
-  if(favoriteIds.has(item.id)){
-    db.collection('favorites').doc(item.id).delete().then(() => {
-      favoriteIds.delete(item.id);
-      renderRecentActivity();
-      renderCalendarDetail();
-      renderFavorites();
-    }).catch(() => {
-      console.error('No se pudo quitar de favoritos. Revisa las reglas de Firestore para "favorites".');
+function startNotificationsListener(){
+  const myKey = myKeyNow();
+  if(!myKey || notificationsListenerStarted) return;
+  notificationsListenerStarted = true;
+  // nota: a propósito NO se usa .orderBy() aquí junto al .where() — combinar
+  // ambos en Firestore exige crear un índice compuesto manualmente. En su
+  // lugar, pedimos todas las notificaciones del usuario y las ordenamos
+  // aquí mismo por fecha, así no depende de configurar nada en Firebase.
+  db.collection('notifications')
+    .where('recipientKey', '==', myKey)
+    .onSnapshot(snap => {
+      let items = [];
+      snap.forEach(doc => items.push(Object.assign({ id: doc.id }, doc.data())));
+      items.sort((a, b) => {
+        const at = a.timestamp ? a.timestamp.toMillis() : 0;
+        const bt = b.timestamp ? b.timestamp.toMillis() : 0;
+        return bt - at;
+      });
+      notifItems = items.slice(0, 50);
+      renderNotifications();
+    }, err => {
+      console.error('No se pudieron leer las notificaciones (revisa las reglas de Firestore para la colección "notifications"):', err);
     });
-  } else {
-    db.collection('favorites').doc(item.id).set({
-      type: item.type,
-      timestamp: firebase.firestore.Timestamp.fromDate(item.date),
-      favoritedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      favoriteIds.add(item.id);
-      renderRecentActivity();
-      renderCalendarDetail();
-      renderFavorites();
-    }).catch(() => {
-      console.error('No se pudo guardar el favorito. Revisa las reglas de Firestore para "favorites".');
+}
+
+function markAllNotificationsRead(){
+  const unread = notifItems.filter(n => !n.read);
+  if(!unread.length) return;
+  const batch = db.batch();
+  unread.forEach(n => batch.update(db.collection('notifications').doc(n.id), { read:true }));
+  batch.commit().catch(err => {
+    console.error('No se pudo marcar como leídas las notificaciones:', err);
+  });
+}
+
+document.getElementById('notifBtn').addEventListener('click', function(){
+  document.getElementById('notifOverlay').classList.add('show');
+  setTimeout(markAllNotificationsRead, 900);
+});
+document.getElementById('notifCloseBtn').addEventListener('click', function(){
+  document.getElementById('notifOverlay').classList.remove('show');
+});
+document.getElementById('notifOverlay').addEventListener('click', function(e){
+  if(e.target === this) this.classList.remove('show');
+});
+
+/* ---------- MOOD TRACKER: estado de ánimo en tiempo real ---------- */
+const MOOD_EVENT_TYPE = { '😄':'mood_feliz', '😴':'mood_cansado', '🥺':'mood_triste', '😍':'mood_enamorado', '🫩':'mood_estresado','😠':'mood_enojado'};
+let moodListenerStarted = false;
+
+function initMoodTracker(){
+  if(!currentUserLabel) return;
+  const myKey = currentUserLabel.toLowerCase();
+  const otherKey = myKey === 'admin' ? 'mor' : 'admin';
+  const nombrePareja = otherKey === 'admin' ? 'Oliver' : 'Love';
+  const nombreActual = myKey === 'admin' ? 'Oliver' : 'Love';
+  
+  document.getElementById('moodUserLabel').textContent = nombreActual;
+  
+  const triggerBtn = document.getElementById('moodTriggerBtn');
+  const floatingBar = document.getElementById('moodFloatingBar');
+  const currentEmoji = document.getElementById('currentMoodEmoji');
+  const currentText = document.getElementById('currentMoodText');
+
+  let currentHoveredEmoji = null;
+
+  // Lógica para TACTIL (Móviles)
+  triggerBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Evita que la pantalla haga scroll por accidente
+    floatingBar.classList.add('active'); // Muestra la barra al tocar
+  }, {passive: false});
+
+  triggerBtn.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    
+    // Obtenemos el elemento exacto sobre el que está el dedo en este momento
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    // Limpiamos el estado anterior
+    document.querySelectorAll('.mood-fb-btn').forEach(btn => btn.classList.remove('hovered'));
+    currentHoveredEmoji = null;
+
+    // Si el dedo está sobre un botón de emoji, le damos la clase hovered
+    if(target && target.closest('.mood-fb-btn')) {
+      const btn = target.closest('.mood-fb-btn');
+      btn.classList.add('hovered');
+      currentHoveredEmoji = btn;
+    }
+  }, {passive: false});
+
+  triggerBtn.addEventListener('touchend', (e) => {
+    // Cuando sueltas el dedo, ocultamos la barra
+    floatingBar.classList.remove('active');
+    
+    // Si soltaste el dedo estando sobre un emoji, lo seleccionamos
+    if(currentHoveredEmoji) {
+      const emoji = currentHoveredEmoji.dataset.emoji;
+      const label = currentHoveredEmoji.dataset.label;
+      
+      db.collection('mood').doc('state').set({
+        [myKey]: { emoji, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }
+      }, {merge:true}).catch(() => {});
+      
+      logEvent(MOOD_EVENT_TYPE[emoji] || 'mood');
+      createNotification('mood', { emoji, label });
+      currentHoveredEmoji.classList.remove('hovered');
+      currentHoveredEmoji = null;
+    }
+  });
+
+  // Lógica para MOUSE (Por si lo pruebas en PC)
+  triggerBtn.addEventListener('mouseenter', () => floatingBar.classList.add('active'));
+  floatingBar.addEventListener('mouseleave', () => floatingBar.classList.remove('active'));
+  
+  document.querySelectorAll('.mood-fb-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', () => btn.classList.add('hovered'));
+    btn.addEventListener('mouseleave', () => btn.classList.remove('hovered'));
+    btn.addEventListener('click', function(){
+      const emoji = this.dataset.emoji;
+      const label = this.dataset.label;
+      db.collection('mood').doc('state').set({
+        [myKey]: { emoji, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }
+      }, {merge:true}).catch(() => {});
+      logEvent(MOOD_EVENT_TYPE[emoji] || 'mood');
+      createNotification('mood', { emoji, label });
+      floatingBar.classList.remove('active');
     });
+  });
+
+  if(moodListenerStarted) return;
+  moodListenerStarted = true;
+
+  // Escuchar Firebase para actualizar en vivo
+  db.collection('mood').doc('state').onSnapshot(doc => {
+    if(!doc.exists) return;
+    const data = doc.data();
+    const mine = data[myKey];
+    const theirs = data[otherKey];
+
+    if(mine && mine.emoji){
+      const btnTarget = document.querySelector(`.mood-fb-btn[data-emoji="${mine.emoji}"]`);
+      if(btnTarget) {
+        currentEmoji.textContent = mine.emoji;
+        currentText.textContent = btnTarget.dataset.label;
+      }
+    }
+
+    const partnerLine = document.getElementById('moodPartnerLine');
+    const careNote = document.getElementById('moodCareNote');
+    
+    if(theirs && theirs.emoji){
+      partnerLine.textContent = `${nombrePareja} hoy: ${theirs.emoji}`;
+      if (theirs.emoji === '🥺' || theirs.emoji === '😴') {
+        const apodoParejaPesado = (myKey === 'admin') ? 'Morcito' : 'Pollito';
+        careNote.textContent = `${apodoParejaPesado} tuvo un día pesado, recuerda decirle que lo amas 💜`;
+      } else {
+        careNote.textContent = '';
+      }
+    } else {
+      partnerLine.textContent = '';
+      careNote.textContent = '';
+    }
+  });
+}
+
+
+/* ---------- CUPONERA ---------- */
+const DEFAULT_COUPONS = [
+  { icon:'🍽️', title:'Una comida Romántica', desc:'Elige el restaurante, yo invito', order:1 },
+  { icon:'💆', title:'Un Masaje Completo', desc:'Sin prisas, con velitas y todo', order:2 },
+  { icon:'🎬', title:'Tu peli o serie favotita', desc:'Tú eliges, yo veo ', order:3 },
+  { icon:'🔥', title:'Sexo sin condón', desc:'Solo para nosotros dos 🔥', order:4 },
+  { icon:'👩🏻‍❤️‍💋‍👨🏻', title:'Un día entero juntos', desc:'Hoy yo me encargo de todo', order:5 },
+  { icon:'🎁', title:'Sorpresa a tu elección', desc:'Pide lo q quieras, dentro de lo razonable 😏', order:6 },
+];
+
+let couponsListenerStarted = false;
+let selectedCouponForConfirm = null;
+let selectedCouponIcon = '🎁';
+
+
+
+/* Efecto carrusel centrado: la tarjeta del centro se ve nítida y a tamaño
+   completo; las de los costados se ven más chicas, atenuadas y difuminadas. */
+let couponVisualsRAF = null;
+function updateCouponVisuals(){
+  const carousel = document.getElementById('couponCarousel');
+  const dots = document.getElementById('couponDots');
+  if(!carousel) return;
+  const cards = carousel.querySelectorAll('.coupon-card');
+  if(!cards.length) return;
+
+  const carouselRect = carousel.getBoundingClientRect();
+  const centerX = carouselRect.left + carouselRect.width / 2;
+  let closest = 0, minDist = Infinity;
+
+  cards.forEach((card, i) => {
+    const cardRect = card.getBoundingClientRect();
+    const cardCenter = cardRect.left + cardRect.width / 2;
+    const dist = Math.abs(cardCenter - centerX);
+    const norm = Math.min(dist / (carouselRect.width / 2), 1);
+
+    const scale = 1 - norm * 0.26;
+    const opacity = 1 - norm * 0.6;
+    const blur = norm * 3.5;
+
+    card.style.transform = `scale(${scale})`;
+    card.style.opacity = opacity;
+    card.style.filter = `blur(${blur}px)`;
+
+    if(dist < minDist){ minDist = dist; closest = i; }
+  });
+
+  if(dots){
+    dots.querySelectorAll('.coupon-dot').forEach((d, i) => d.classList.toggle('active', i === closest));
   }
 }
 
-function handleStarClick(e){
-  const btn = e.target.closest('.star-btn');
-  if(!btn) return;
-  const item = eventsById.get(btn.dataset.id);
-  if(!item) return;
-  toggleFavorite(item);
+function onCouponCarouselScroll(){
+  if(couponVisualsRAF) return;
+  couponVisualsRAF = requestAnimationFrame(() => {
+    updateCouponVisuals();
+    couponVisualsRAF = null;
+  });
 }
 
-document.getElementById('activityList').addEventListener('click', handleStarClick);
-document.getElementById('calDayList').addEventListener('click', handleStarClick);
-document.getElementById('favoritesList').addEventListener('click', handleStarClick);
+/* Centra el padding del carrusel para que la primera y última tarjeta
+   también puedan llegar al centro. */
+function updateCouponCarouselPadding(){
+  const carousel = document.getElementById('couponCarousel');
+  if(!carousel) return;
+  const firstCard = carousel.querySelector('.coupon-card');
+  if(!firstCard) { carousel.style.paddingLeft = ''; carousel.style.paddingRight = ''; return; }
+  const pad = Math.max((carousel.clientWidth - firstCard.offsetWidth) / 2, 0);
+  carousel.style.paddingLeft = pad + 'px';
+  carousel.style.paddingRight = pad + 'px';
+}
 
-/* ------------------------------------------------------------
-   Cupones (vista admin: disponibles / canjeados, con reset)
-   ------------------------------------------------------------ */
-let couponsAdminListenerStarted = false;
+function renderCoupons(coupons){
+  const carousel = document.getElementById('couponCarousel');
+  const dots = document.getElementById('couponDots');
+  const available = coupons.filter(c => !c.redeemed).sort((a,b) => (a.order||0) - (b.order||0));
 
-function loadCouponsAdmin(){
-  if(couponsAdminListenerStarted) return;
-  couponsAdminListenerStarted = true;
+  if(!available.length){
+    carousel.innerHTML = '<p class="coupon-empty-msg">Ya canjeaste todos los cupones 💜 avísame si quieres que recargue la cuponera.</p>';
+    dots.innerHTML = '';
+    return;
+  }
+
+  carousel.innerHTML = available.map(c => `
+    <div class="coupon-card">
+      <div class="coupon-inner">
+        <div class="coupon-stars">✦ ✦ ✦</div>
+        <div class="coupon-icon">${c.icon || '🎁'}</div>
+        <p class="coupon-vale">Vale por:</p>
+        <p class="coupon-title">${c.title}</p>
+        <p class="coupon-desc">${c.desc || ''}</p>
+        <div class="coupon-sep"></div>
+        <button class="coupon-redeem-btn" data-id="${c.id}" data-title="${(c.title || '').replace(/"/g,'&quot;')}" data-icon="${c.icon || '🎁'}">Canjear Cupón</button>
+      </div>
+    </div>
+  `).join('');
+
+  dots.innerHTML = available.map((c, i) => `<span class="coupon-dot ${i === 0 ? 'active' : ''}"></span>`).join('');
+
+  carousel.querySelectorAll('.coupon-redeem-btn').forEach(btn => {
+    btn.addEventListener('click', function(){
+      selectedCouponForConfirm = this.dataset.id;
+      selectedCouponIcon = this.dataset.icon || '🎁';
+      document.getElementById('couponConfirmTitle').textContent = this.dataset.title;
+      document.getElementById('couponConfirmOverlay').classList.add('show');
+    });
+  });
+
+  carousel.removeEventListener('scroll', onCouponCarouselScroll);
+  carousel.addEventListener('scroll', onCouponCarouselScroll, { passive:true });
+
+  updateCouponCarouselPadding();
+  requestAnimationFrame(updateCouponVisuals);
+
+  updateCouponStatusPanel(coupons);
+}
+
+/* El aviso de "qué cupón canjeé" ahora se arma a partir de Firebase (campo
+   "acknowledged"), así que sigue apareciendo aunque cierres sesión y vuelvas
+   a entrar — solo desaparece cuando tocas la palomita ✅. */
+function updateCouponStatusPanel(coupons){
+  const pending = coupons
+    .filter(c => c.redeemed && !c.acknowledged)
+    .sort((a, b) => {
+      const at = (a.redeemedAt && a.redeemedAt.toMillis) ? a.redeemedAt.toMillis() : 0;
+      const bt = (b.redeemedAt && b.redeemedAt.toMillis) ? b.redeemedAt.toMillis() : 0;
+      return bt - at;
+    });
+  if(!pending.length){
+    const panel = document.getElementById('couponStatusPanel');
+    if(!panel.classList.contains('splitting')){
+      panel.style.display = 'none';
+      panel.removeAttribute('data-coupon-id');
+    }
+    return;
+  }
+  const c = pending[0];
+  showCouponStatus(c.id, c.icon, c.title, true);
+}
+
+window.addEventListener('resize', () => {
+  updateCouponCarouselPadding();
+  updateCouponVisuals();
+});
+
+function loadCoupons(){
+  // Eliminamos la llamada a seedCouponsIfEmpty()
+  if(couponsListenerStarted) return;
+  couponsListenerStarted = true;
+  
   db.collection('coupons').onSnapshot(snap => {
     const coupons = [];
     snap.forEach(doc => coupons.push(Object.assign({ id: doc.id }, doc.data())));
-    coupons.sort((a, b) => (a.order || 0) - (b.order || 0));
-    renderCouponsAdmin(coupons);
-  }, () => {
-    document.getElementById('couponAdminList').innerHTML =
-      '<li class="empty-msg">No se pudo cargar. Revisa las reglas de Firestore para "coupons".</li>';
+    renderCoupons(coupons);
   });
 }
 
-function renderCouponsAdmin(coupons){
-  const list = document.getElementById('couponAdminList');
-  if(!coupons.length){
-    list.innerHTML = '<li class="empty-msg">Todavía no hay cupones — se crean solos cuando alguien abra la pestaña de Regalos por primera vez.</li>';
+document.getElementById('couponConfirmCancel').addEventListener('click', function(){
+  document.getElementById('couponConfirmOverlay').classList.remove('show');
+  selectedCouponForConfirm = null;
+});
+
+function showCouponStatus(couponId, icon, title, ok){
+  const panel = document.getElementById('couponStatusPanel');
+  const iconEl = document.getElementById('couponStatusIcon');
+  const titleEl = document.getElementById('couponStatusTitle');
+  const textEl = document.getElementById('couponStatusText');
+  const ackBtn = document.getElementById('couponAckBtn');
+  iconEl.textContent = icon || '🎁';
+  titleEl.textContent = title || '';
+  textEl.textContent = ok ? 'Haz canjeado este cupon!' : '❌ No se pudo canjear, intenta de nuevo';
+  textEl.className = 'coupon-status-text ' + (ok ? 'ok' : 'fail');
+  if(ok && couponId){
+    panel.dataset.couponId = couponId;
+    ackBtn.style.display = 'inline-flex';
+  } else {
+    panel.removeAttribute('data-coupon-id');
+    ackBtn.style.display = 'none';
+  }
+  panel.classList.remove('splitting');
+  panel.querySelectorAll('.coupon-split-half').forEach(el => el.remove());
+  panel.style.display = 'none';
+  void panel.offsetWidth; /* reinicia la animación de entrada */
+  panel.style.display = 'block';
+}
+
+/* al tocar la palomita, el cupón canjeado se "parte en dos" y desaparece;
+   ahí (y solo ahí) se marca como visto en Firebase, para que ya no vuelva a aparecer */
+document.getElementById('couponAckBtn').addEventListener('click', function(){
+  const panel = document.getElementById('couponStatusPanel');
+  const couponId = panel.dataset.couponId;
+  if(!couponId){ panel.style.display = 'none'; return; }
+
+  const left = document.createElement('div');
+  left.className = 'coupon-split-half left';
+  left.innerHTML = panel.innerHTML;
+  const right = document.createElement('div');
+  right.className = 'coupon-split-half right';
+  right.innerHTML = panel.innerHTML;
+  panel.appendChild(left);
+  panel.appendChild(right);
+  panel.classList.add('splitting');
+
+  requestAnimationFrame(() => {
+    left.classList.add('animate');
+    right.classList.add('animate');
+  });
+
+  setTimeout(() => {
+    panel.style.display = 'none';
+    panel.classList.remove('splitting');
+    left.remove();
+    right.remove();
+    panel.removeAttribute('data-coupon-id');
+  }, 720);
+
+  db.collection('coupons').doc(couponId).set({ acknowledged: true }, {merge:true}).catch(() => {
+    console.error('No se pudo marcar el cupón como visto.');
+  });
+});
+
+document.getElementById('couponConfirmYes').addEventListener('click', function(){
+  if(!selectedCouponForConfirm) return;
+  const couponId = selectedCouponForConfirm;
+  const title = document.getElementById('couponConfirmTitle').textContent;
+  const icon = selectedCouponIcon;
+
+  db.collection('coupons').doc(couponId).set({
+    redeemed: true,
+    redeemedBy: currentUserLabel,
+    redeemedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    acknowledged: false
+  }, {merge:true}).then(() => {
+    logEvent('coupon_redeemed', { couponTitle: title });
+    document.getElementById('couponConfirmOverlay').classList.remove('show');
+    selectedCouponForConfirm = null;
+    // el panel de estatus lo muestra updateCouponStatusPanel() en cuanto llegue
+    // el cambio en tiempo real, así ya no depende de la memoria de esta sesión
+  }).catch(() => {
+    document.getElementById('couponConfirmOverlay').classList.remove('show');
+    showCouponStatus(null, icon, title, false);
+    setTimeout(() => {
+      const panel = document.getElementById('couponStatusPanel');
+      if(!panel.dataset.couponId){ panel.style.display = 'none'; }
+    }, 3500);
+    alert('No se pudo canjear el cupón, revisa tu conexión.');
+  });
+});
+
+/* ---------- CÁPSULA DEL TIEMPO ---------- */
+let capsuleInterval = null;
+let capsuleListenerStarted = false;
+
+function formatCountdown(ms){
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if(days > 0) return `Se abre en ${days}d ${hours}h ${minutes}m`;
+  if(hours > 0) return `Se abre en ${hours}h ${minutes}m ${seconds}s`;
+  return `Se abre en ${minutes}m ${seconds}s`;
+}
+
+function renderCapsule(data){
+  const lockIcon = document.getElementById('capsuleLockIcon');
+  const title = document.getElementById('capsuleTitle');
+  const countdown = document.getElementById('capsuleCountdown');
+  const reveal = document.getElementById('capsuleReveal');
+  const image = document.getElementById('capsuleImage');
+  const text = document.getElementById('capsuleText');
+
+  if(capsuleInterval){ clearInterval(capsuleInterval); capsuleInterval = null; }
+
+  if(!data || !data.unlockDate){
+    lockIcon.textContent = '🔒';
+    title.textContent = 'Cápsula del Tiempo';
+    countdown.textContent = 'Aún no hay ninguna cápsula guardada.';
+    reveal.style.display = 'none';
     return;
   }
 
-  list.innerHTML = coupons.map(c => {
-    const redeemedDate = c.redeemedAt && c.redeemedAt.toDate
-      ? c.redeemedAt.toDate().toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})
-      : '';
-    const statusHTML = c.redeemed
-      ? `<span class="coupon-status redeemed">✅ Canjeado por ${c.redeemedBy || '—'}${redeemedDate ? ' · ' + redeemedDate : ''}</span>`
-      : `<span class="coupon-status available">🟢 Disponible</span>`;
-    const resetBtn = c.redeemed ? `<button class="coupon-reset-btn" data-id="${c.id}">↺ Restablecer</button>` : '';
+  const unlockTime = new Date(data.unlockDate).getTime();
 
-    return `<li class="coupon-admin-item">
-        <div class="coupon-admin-main">
-          <span class="coupon-admin-icon">${c.icon || '🎁'}</span>
-          <div>
-            <p class="coupon-admin-title">${c.title || ''}</p>
-            <p class="coupon-admin-desc">${c.desc || ''}</p>
-            ${statusHTML}
-          </div>
-        </div>
-        ${resetBtn}
-      </li>`;
-  }).join('');
+  function tick(){
+    const remaining = unlockTime - Date.now();
+    if(remaining <= 0){
+      if(capsuleInterval){ clearInterval(capsuleInterval); capsuleInterval = null; }
+      lockIcon.textContent = '💌';
+      title.textContent = data.title || 'Cápsula del Tiempo';
+      countdown.textContent = '¡Se abrió! 🎉';
+      reveal.style.display = 'block';
+      if(data.imageUrl){
+        image.src = data.imageUrl;
+        image.style.display = 'block';
+      } else {
+        image.style.display = 'none';
+      }
+      const paragraphs = (data.text || '').split('\n\n').map(p => p.trim()).filter(Boolean);
+      text.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+    } else {
+      lockIcon.textContent = '🔒';
+      title.textContent = data.title || 'Cápsula del Tiempo';
+      countdown.textContent = formatCountdown(remaining);
+      reveal.style.display = 'none';
+    }
+  }
 
-  list.querySelectorAll('.coupon-reset-btn').forEach(btn => {
-    btn.addEventListener('click', function(){
-      const id = this.dataset.id;
-      db.collection('coupons').doc(id).set({
-        redeemed: false, redeemedBy: null, redeemedAt: null
-      }, {merge:true}).catch(() => {
-        alert('No se pudo restablecer el cupón, revisa tu conexión.');
+  tick();
+  capsuleInterval = setInterval(tick, 1000);
+}
+
+function loadCapsule(){
+  if(capsuleListenerStarted) return;
+  capsuleListenerStarted = true;
+  db.collection('capsule').doc('current').onSnapshot(doc => {
+    const data = doc.exists ? doc.data() : null;
+    renderCapsule(data);
+
+    // La cápsula se configura fuera de la app (consola de Firestore), así que
+    // detectamos cambios de "unlockDate" para avisar solo una vez por cápsula
+    // nueva, sin generar un aviso retroactivo la primera vez que se activa esto.
+    if(data && data.unlockDate){
+      if(data.notifiedFor === undefined){
+        db.collection('capsule').doc('current').set({ notifiedFor: data.unlockDate }, {merge:true}).catch(() => {});
+      } else if(data.notifiedFor !== data.unlockDate){
+        db.collection('capsule').doc('current').set({ notifiedFor: data.unlockDate }, {merge:true}).catch(() => {});
+        const actorKey = (data.author || 'admin').toLowerCase();
+        db.collection('notifications').add({
+          type: 'capsule_new',
+          actorKey: actorKey,
+          recipientKey: otherKeyOf(actorKey),
+          meta: {},
+          read: false,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => {
+          console.error('No se pudo crear la notificación de cápsula nueva:', err);
+        });
+      }
+    }
+  }, () => {
+    document.getElementById('capsuleCountdown').textContent = 'No se pudo cargar.';
+  });
+}
+
+document.getElementById('continueBtn').addEventListener('click', function(){
+  goTo('final');
+  setTimeout(() => {
+    buildStaticStars(document.getElementById('starfieldDashboard'), 90);
+    buildAccentParticles();
+    goTo('dashboard');
+    loadPlant();
+    initMoodTracker();
+    loadCoupons();
+    loadCapsule();
+    startNotificationsListener();
+  }, 4200);
+});
+
+document.getElementById('restartLink').addEventListener('click', function(){
+  location.reload();
+});
+
+/* ---------- DASHBOARD: navegación inferior (pestañas) ---------- */
+function buildStaticStars(container, count){
+  container.innerHTML = '';
+  let shadows = [];
+  for(let i=0;i<count;i++){
+    shadows.push(`${Math.random()*100}vw ${Math.random()*100}vh var(--star-white)`);
+  }
+  const dot = document.createElement('div');
+  dot.style.width='1px';dot.style.height='1px';
+  dot.style.position='absolute';
+  dot.style.boxShadow = shadows.join(',');
+  dot.style.animation = 'twinkle 4s ease-in-out infinite';
+  container.appendChild(dot);
+}
+
+document.querySelectorAll('.bottom-nav-btn[data-dashtab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.bottom-nav-btn[data-dashtab]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.dash-tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('dash-tab-' + btn.dataset.dashtab).classList.add('active');
+
+    if(btn.dataset.dashtab === 'regalos'){
+      /* la pestaña estaba oculta (display:none) cuando se renderizó la
+         cuponera la primera vez, así que el padding de centrado se calculó
+         con ancho 0. Al abrir la pestaña, recalculamos con el ancho real. */
+      requestAnimationFrame(() => {
+        updateCouponCarouselPadding();
+        updateCouponVisuals();
       });
+    }
+  });
+});
+
+document.getElementById('btnDiario').addEventListener('click', function(){
+  buildStaticStars(document.getElementById('starfieldDiario'), 90);
+  goTo('diario');
+});
+document.getElementById('btnAlbum').addEventListener('click', function(){
+  buildStaticStars(document.getElementById('starfieldAlbum'), 90);
+  goTo('album');
+});
+document.getElementById('backFromDiario').addEventListener('click', () => { goTo('dashboard'); loadPlant(); });
+document.getElementById('backFromAlbum').addEventListener('click', () => { goTo('dashboard'); loadPlant(); });
+
+/* ---------- NUESTRO BUZÓN ---------- */
+const SIGNATURE_DEFAULTS = { Mor: 'Love', Admin: 'Rame' };
+
+function getMySignature(){
+  const saved = localStorage.getItem('buzonSignature_' + currentUserLabel);
+  if(saved) return saved;
+  return SIGNATURE_DEFAULTS[currentUserLabel] || currentUserLabel || '💌';
+}
+
+document.getElementById('buzonWidget').addEventListener('click', function(){
+  document.getElementById('currentSignatureLabel').textContent = getMySignature();
+  goTo('buzon');
+  startNotesListener();
+});
+document.getElementById('backFromBuzon').addEventListener('click', () => goTo('dashboard'));
+
+/* firma */
+document.getElementById('signatureBtn').addEventListener('click', function(){
+  document.getElementById('signatureInput').value = getMySignature();
+  document.getElementById('signatureModalOverlay').classList.add('show');
+});
+document.getElementById('cancelSignatureBtn').addEventListener('click', function(){
+  document.getElementById('signatureModalOverlay').classList.remove('show');
+});
+document.getElementById('saveSignatureBtn').addEventListener('click', function(){
+  const val = document.getElementById('signatureInput').value.trim();
+  if(val){
+    localStorage.setItem('buzonSignature_' + currentUserLabel, val);
+    document.getElementById('currentSignatureLabel').textContent = val;
+  }
+  document.getElementById('signatureModalOverlay').classList.remove('show');
+});
+
+/* ---------- BUZÓN: cartas mutuas de una sola vista (pergamino) ---------- */
+document.getElementById('newMailLetterBtn').addEventListener('click', function(){
+  document.getElementById('mailEditDedication').value = '';
+  document.getElementById('mailEditDate').value = '';
+  document.getElementById('mailEditBody').value = '';
+  document.getElementById('mailEditPs').value = '';
+  document.getElementById('mailEditSignature').value = '';
+  document.getElementById('mailEditorOverlay').classList.add('show');
+});
+document.getElementById('cancelMailEditorBtn').addEventListener('click', function(){
+  document.getElementById('mailEditorOverlay').classList.remove('show');
+});
+document.getElementById('sendMailLetterBtn').addEventListener('click', function(){
+  const dedication = document.getElementById('mailEditDedication').value.trim();
+  const date = document.getElementById('mailEditDate').value.trim();
+  const body = document.getElementById('mailEditBody').value.trim();
+  const ps = document.getElementById('mailEditPs').value.trim();
+  const signature = document.getElementById('mailEditSignature').value.trim();
+  if(!body){ alert('Escribe al menos el contenido de la carta.'); return; }
+  if(!currentUserLabel) return;
+  const myKey = myKeyNow();
+
+  db.collection('mailLetters').add({
+    from: currentUserLabel,
+    to: displayCapitalized(otherKeyOf(myKey)),
+    dedication: dedication,
+    date: date,
+    body: body,
+    ps: ps,
+    signature: signature,
+    read: false,
+    readAt: null,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    document.getElementById('mailEditorOverlay').classList.remove('show');
+    createNotification('letter_new');
+  }).catch(() => {
+    alert('No se pudo enviar la carta, revisa tu conexión.');
+  });
+});
+function displayCapitalized(key){
+  return key === 'admin' ? 'Admin' : 'Mor';
+}
+
+let mailLetterListenerStarted = false;
+let mailLetterQueue = [];
+let currentMailLetterId = null;
+function startMailLetterListener(){
+  if(mailLetterListenerStarted) return;
+  mailLetterListenerStarted = true;
+  const myKey = displayCapitalized(myKeyNow());
+
+  // igual que en notificaciones: sin .orderBy() junto al .where() para no
+  // necesitar crear un índice compuesto en Firebase; se ordena aquí mismo.
+  db.collection('mailLetters')
+    .where('to', '==', myKey)
+    .where('read', '==', false)
+    .onSnapshot(snap => {
+      let items = [];
+      snap.forEach(doc => items.push(Object.assign({ id: doc.id }, doc.data())));
+      items.sort((a, b) => {
+        const at = a.createdAt ? a.createdAt.toMillis() : 0;
+        const bt = b.createdAt ? b.createdAt.toMillis() : 0;
+        return at - bt; // la más antigua primero, como un buzón real
+      });
+      mailLetterQueue = items;
+      maybeShowNextMailLetter();
+    }, err => {
+      console.error('No se pudieron leer las cartas del buzón (revisa las reglas de Firestore para "mailLetters"):', err);
+    });
+}
+
+function maybeShowNextMailLetter(){
+  const overlayShown = document.getElementById('mailLetterOverlay').classList.contains('show');
+  if(overlayShown || !mailLetterQueue.length) return;
+  showMailLetter(mailLetterQueue[0]);
+}
+
+function showMailLetter(data){
+  currentMailLetterId = data.id;
+  document.getElementById('mailLetterMeta').innerHTML =
+    `Para: ${data.dedication || ''} &nbsp;|&nbsp; ${data.date || ''}`;
+  const paragraphs = (data.body || '').split('\n\n').map(p => p.trim()).filter(Boolean);
+  document.getElementById('mailLetterBody').innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('mailLetterPs').textContent = data.ps || '';
+  document.getElementById('mailLetterSignature').textContent = data.signature || '';
+
+  // reinicia el pergamino a su estado cerrado antes de mostrarlo
+  document.getElementById('mailLetterWarning').style.display = '';
+  document.getElementById('mailScrollWrap').classList.remove('show');
+  document.getElementById('mailScrollPaper').classList.remove('unrolling');
+  document.getElementById('mailLetterSpoiler').classList.remove('revealed');
+
+  document.getElementById('mailLetterOverlay').classList.add('show');
+}
+
+document.getElementById('openMailLetterBtn').addEventListener('click', function(){
+  document.getElementById('mailLetterWarning').style.display = 'none';
+  const scrollWrap = document.getElementById('mailScrollWrap');
+  scrollWrap.classList.add('show');
+  requestAnimationFrame(() => {
+    document.getElementById('mailScrollPaper').classList.add('unrolling');
+  });
+});
+document.getElementById('mailLetterSpoiler').addEventListener('click', function(){
+  this.classList.toggle('revealed');
+});
+document.getElementById('mailLeidoBtn').addEventListener('click', function(){
+  if(!currentMailLetterId) return;
+  db.collection('mailLetters').doc(currentMailLetterId).update({
+    read: true,
+    readAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(() => {});
+  document.getElementById('mailLetterOverlay').classList.remove('show');
+  currentMailLetterId = null;
+  // el listener en vivo va a quitar esta carta de la fila; si hay otra pendiente,
+  // se muestra sola un momento después.
+  setTimeout(maybeShowNextMailLetter, 900);
+});
+
+/* añadir nota */
+document.getElementById('addNoteBtn').addEventListener('click', function(){
+  document.getElementById('noteText').value = '';
+  document.getElementById('noteModalSignaturePreview').textContent = getMySignature();
+  document.getElementById('noteModalOverlay').classList.add('show');
+});
+document.getElementById('cancelNoteBtn').addEventListener('click', function(){
+  document.getElementById('noteModalOverlay').classList.remove('show');
+});
+document.getElementById('pinNoteBtn').addEventListener('click', function(){
+  const text = document.getElementById('noteText').value.trim();
+  if(!text) return;
+  db.collection('notes').add({
+    text: text,
+    signature: getMySignature(),
+    author: currentUserLabel,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    document.getElementById('noteModalOverlay').classList.remove('show');
+    createNotification('note_new');
+  }).catch(() => {
+    alert('No se pudo pegar la nota, revisa tu conexión.');
+  });
+});
+
+/* pizarrón en vivo */
+/* pizarrón en vivo */
+let notesListenerStarted = false;
+function startNotesListener(){
+  if(notesListenerStarted) return;
+  notesListenerStarted = true;
+  db.collection('notes').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+    const board = document.getElementById('corkboard');
+    const empty = document.getElementById('corkboardEmpty');
+    if(snapshot.empty){
+      board.innerHTML = '';
+      board.appendChild(empty);
+      return;
+    }
+    board.innerHTML = '';
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      const date = d.timestamp ? d.timestamp.toDate() : new Date();
+      const dateStr = date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+      
+      const note = document.createElement('div');
+      // Si en Firebase esta nota ya tiene "like", le ponemos la clase "liked"
+      note.className = 'sticky-note' + (d.liked ? ' liked' : '');
+      
+      // Inyectamos el corazón en el HTML de la notita
+      note.innerHTML = `
+        <div class="note-heart">❤️</div>
+        <div class="sticky-note-text"></div>
+        <div class="sticky-note-meta"><span>${dateStr}</span><span class="sticky-note-sign"></span></div>`;
+      
+      note.querySelector('.sticky-note-text').textContent = d.text;
+      note.querySelector('.sticky-note-sign').textContent = d.signature || '';
+      
+      // --- NUEVO: LÓGICA DE DOBLE TAP ---
+      let lastTap = 0;
+      note.addEventListener('click', function(e) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        
+        // Si el tiempo entre dos toques es menor a 400ms (doble tap rápido)
+        if (tapLength < 400 && tapLength > 0) {
+          e.preventDefault(); // Evita el zoom accidental en móviles
+          
+          // Alternamos el estado: si no tenía like se lo ponemos, si tenía se lo quitamos
+          const isLiked = !note.classList.contains('liked');
+          
+          // Actualizamos la base de datos de Firebase instantáneamente
+          db.collection('notes').doc(doc.id).update({ liked: isLiked }).catch(() => {
+             console.error("No se pudo guardar el like");
+          });
+
+          // avisamos al autor de la nota solo cuando se DA like (no al quitarlo)
+          // y solo si quien da el like no es el propio autor
+          if(isLiked && d.author && currentUserLabel && d.author.toLowerCase() !== currentUserLabel.toLowerCase()){
+            createNotification('note_like');
+          }
+          
+          // Efecto de vibración muy leve si están en móvil (opcional pero bonito)
+          if (navigator.vibrate && isLiked) navigator.vibrate(50);
+        }
+        lastTap = currentTime;
+      });
+      // ----------------------------------
+
+      board.appendChild(note);
     });
   });
 }
 
-/* ------------------------------------------------------------
-   Cápsula del tiempo (configurar fecha, título, texto e imagen)
-   ------------------------------------------------------------ */
-let capsuleAdminLoaded = false;
-
-function loadCapsuleAdmin(){
-  db.collection('capsule').doc('current').get().then(doc => {
-    const statusEl = document.getElementById('capsuleStatus');
-    if(doc.exists){
-      const d = doc.data();
-      const unlock = d.unlockDate ? new Date(d.unlockDate) : null;
-      if(unlock && unlock.getTime() > Date.now()){
-        statusEl.textContent = `🔒 Se abre el ${unlock.toLocaleString('es-MX', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})}`;
-      } else if(unlock){
-        statusEl.textContent = `💌 Ya se abrió (estaba programada para el ${unlock.toLocaleString('es-MX', {day:'numeric', month:'long', year:'numeric'})})`;
-      } else {
-        statusEl.textContent = 'Sin fecha configurada todavía.';
-      }
-      if(!capsuleAdminLoaded){
-        capsuleAdminLoaded = true;
-        if(d.unlockDate){
-          document.getElementById('capsuleUnlockInput').value = d.unlockDate.slice(0, 16);
-        }
-        document.getElementById('capsuleTitleInput').value = d.title || '';
-        document.getElementById('capsuleTextInput').value = d.text || '';
-        document.getElementById('capsuleImageInput').value = d.imageUrl || '';
-      }
-    } else {
-      statusEl.textContent = 'Todavía no has creado ninguna cápsula.';
-      capsuleAdminLoaded = true;
-    }
-  }).catch(() => {
-    document.getElementById('capsuleStatus').textContent = 'No se pudo cargar, revisa tu conexión.';
-  });
-}
-
-document.getElementById('saveCapsuleBtn').addEventListener('click', function(){
-  const msg = document.getElementById('capsuleSaveMsg');
-  const unlockVal = document.getElementById('capsuleUnlockInput').value;
-  if(!unlockVal){
-    msg.textContent = 'Elige una fecha y hora primero.';
-    return;
-  }
-  const data = {
-    unlockDate: unlockVal, // 'YYYY-MM-DDTHH:MM', el mismo formato que lee el index
-    title: document.getElementById('capsuleTitleInput').value,
-    text: document.getElementById('capsuleTextInput').value,
-    imageUrl: document.getElementById('capsuleImageInput').value
-  };
-  db.collection('capsule').doc('current').set(data).then(() => {
-    msg.textContent = '✅ Guardado';
-    capsuleAdminLoaded = false;
-    loadCapsuleAdmin();
-  }).catch(() => {
-    msg.textContent = 'No se pudo guardar, revisa tu conexión.';
-  });
+/* ---------- TE EXTRAÑO (toque directo por WhatsApp) ---------- */
+const pokeMessages = [
+  "Te extraño 🥺💌",
+  "Estoy pensando en ti ahora mismo 💭💜",
+  "¿Sabes cuánto te extraño? Mucho.",
+  "Estoy pensando en ti ahora mismo 💭💜",
+  "Mándame un abrazo virtual 🤍",
+  "Ojalá estuvieras aquí conmigo 🌙",
+  "Solo quería recordarte que te extraño 💫"
+];
+document.getElementById('btnPoke').addEventListener('click', function(){
+  const msg = pokeMessages[Math.floor(Math.random()*pokeMessages.length)];
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+  const original = this.textContent;
+  this.textContent = '💌 Enviado';
+  setTimeout(() => { this.textContent = original; }, 1800);
 });
 
+/* ---------- DIARIO DE NOSOTROS (envía por WhatsApp) ---------- */
+document.getElementById('sendDiario').addEventListener('click', function(){
+  const text = document.getElementById('diarioText').value.trim();
+  const hint = document.getElementById('diarioHint');
+  if(!text){
+    hint.textContent = 'Escribe algo antes de enviarlo 💌';
+    return;
+  }
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+  hint.textContent = 'Se abrió WhatsApp con tu mensaje — solo presiona enviar.';
+});
+
+/* ---------- ÁLBUM DE MEJORES FOTOS ---------- */
+let selectedPhotoFiles = [];
+document.getElementById('photoInput').addEventListener('change', function(e){
+  const gallery = document.getElementById('gallery');
+  const shareBtn = document.getElementById('shareAlbum');
+  selectedPhotoFiles = Array.from(e.target.files);
+  gallery.innerHTML = '';
+  selectedPhotoFiles.forEach(file => {
+    const url = URL.createObjectURL(file);
+    const img = document.createElement('img');
+    img.src = url;
+    gallery.appendChild(img);
+  });
+  shareBtn.style.display = selectedPhotoFiles.length ? 'inline-block' : 'none';
+});
+
+document.getElementById('shareAlbum').addEventListener('click', async function(){
+  const text = 'Aquí tienes nuestras fotos favoritas 📸💜';
+  if(navigator.canShare && navigator.canShare({files: selectedPhotoFiles})){
+    try{
+      await navigator.share({files: selectedPhotoFiles, text});
+      return;
+    } catch(err){ /* el usuario canceló o no se pudo: seguimos con el respaldo */ }
+  }
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank');
+});
+const bgMusic = document.getElementById('bgMusic');
+const musicBtn = document.getElementById('musicBtn');
+let musicOn = true;
+musicBtn.addEventListener('click', function(){
+  musicOn = !musicOn;
+  if(musicOn){ bgMusic.play().catch(()=>{}); musicBtn.textContent = '🔊'; }
+  else { bgMusic.pause(); musicBtn.textContent = '🔇'; }
+});
+/* ---------- PWA: service worker + botón de instalar ---------- */
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw-stats.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').catch(() => {
+      // si se abre como archivo local (file://) el navegador bloquea el service worker;
+      // esto no afecta el resto de la página, solo el modo "app instalable".
+    });
   });
 }
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('installBtn').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('installBtn').classList.remove('show');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').classList.remove('show');
+});
 </script>
 
 </body>
